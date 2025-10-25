@@ -1,0 +1,179 @@
+/* =========================
+   لوحة تحكم – هوية فاتحة مائية
+   ========================= */
+
+/* ألوان وهوية */
+:root{
+  --brand-50:#f3f9ff;
+  --brand-100:#e6f2ff;
+  --brand-200:#cfe7ff;
+  --brand-300:#aeddff;
+  --brand-400:#7cc5ff;
+  --brand-500:#39a7ff;        /* الأزرق السماوي الأساسي */
+  --brand-600:#1f86e0;
+  --brand-700:#156bb8;
+  --ink-900:#0f2237;
+  --ink-700:#394a5b;
+  --ink-500:#6b7b8b;
+  --ink-300:#aab6c1;
+  --bg:#f6fbff;
+  --white:#fff;
+  --success:#22c55e;
+  --warning:#f59e0b;
+  --danger:#ef4444;
+  --shadow: 0 10px 25px rgba(15,34,55,.08);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:"Cairo",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background: var(--bg);
+  color: var(--ink-900);
+  overflow-x:hidden;
+}
+
+/* ============ Sidebar ============ */
+#sidebar-wrapper{
+  width:260px; min-height:100vh;
+  position:fixed; right:0; top:0;
+  background: linear-gradient(160deg, var(--brand-600), var(--brand-500));
+  color:var(--white);
+  box-shadow: -8px 0 24px rgba(0,0,0,.08);
+  transition: transform .35s ease;
+  z-index:1000;
+}
+#sidebar-wrapper .sidebar-header{
+  padding:28px 16px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+#sidebar-wrapper .logo{
+  width:84px;height:84px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.7);object-fit:cover;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+}
+#sidebar-wrapper .list-group{padding:12px}
+#sidebar-wrapper .list-group-item{
+  background:transparent; border:0; color:#eaf4ff;
+  border-radius:12px; margin:4px 0; padding:12px 14px;
+  font-weight:600; display:flex; align-items:center; gap:10px;
+  transition:all .22s ease;
+}
+#sidebar-wrapper .list-group-item i{width:22px;text-align:center}
+#sidebar-wrapper .list-group-item:hover{
+  background:rgba(255,255,255,.14); transform:translateX(-6px);
+}
+#sidebar-wrapper .list-group-item.active{
+  background:var(--white); color:var(--brand-700);
+  box-shadow: var(--shadow);
+}
+
+/* طيّ/فتح على الموبايل */
+#sidebar-wrapper.active{ transform: translateX(260px) }
+@media (max-width: 992px){
+  #sidebar-wrapper{ transform: translateX(260px) }
+  #sidebar-wrapper.active{ transform: translateX(0) }
+}
+
+/* ============ Content Layout ============ */
+#page-content-wrapper{
+  margin-right:260px; transition: margin-right .35s ease;
+  min-height:100vh;
+}
+@media (max-width: 992px){
+  #page-content-wrapper{ margin-right:0 }
+}
+
+/* ============ Navbar / Topbar ============ */
+.navbar{
+  background: linear-gradient(90deg, var(--white), var(--brand-50));
+  border-bottom:1px solid var(--brand-100);
+  box-shadow: var(--shadow);
+}
+.navbar .btn-outline-light{
+  border-color:var(--brand-600); color:var(--brand-700);
+}
+.navbar .btn-outline-light:hover{ background:var(--brand-600); color:#fff }
+
+/* أدوات التوب بار (الساعة + الجرس) */
+.topbar-tools{
+  display:flex;align-items:center;gap:14px;margin-inline-start:auto;
+}
+.clock{
+  font-weight:700;color:var(--brand-700);letter-spacing:.4px;
+  padding:6px 10px;border-radius:10px;background:var(--brand-100);
+}
+.notif-btn{
+  position:relative; background:transparent;border:0;
+  width:40px;height:40px;border-radius:10px;
+}
+.notif-btn:hover{ background:var(--brand-100) }
+.badge-dot{
+  position:absolute; top:6px; inset-inline-end:6px;
+  width:9px;height:9px;border-radius:50%;
+  background:var(--danger); box-shadow:0 0 0 0 rgba(239,68,68,.7);
+  animation:pulse 1.6s infinite;
+}
+@keyframes pulse{
+  0%{ box-shadow:0 0 0 0 rgba(239,68,68,.7) }
+  70%{ box-shadow:0 0 0 13px rgba(239,68,68,0) }
+  100%{ box-shadow:0 0 0 0 rgba(239,68,68,0) }
+}
+
+/* لوح الإشعارات */
+.notif-panel{
+  position:absolute; top:60px; inset-inline-end:12px;
+  width:min(360px, 92vw); background:#fff; border:1px solid var(--brand-100);
+  border-radius:14px; box-shadow: var(--shadow);
+  padding:10px; display:none; z-index:1200;
+}
+.notif-panel.show{ display:block; animation:fadeIn .18s ease }
+@keyframes fadeIn{ from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:translateY(0)} }
+.notif-item{
+  display:flex; gap:10px; padding:10px 8px; border-radius:10px;
+}
+.notif-item:hover{ background:var(--brand-50) }
+.notif-item i{ color:var(--brand-600); margin-top:3px }
+.notif-time{ color:var(--ink-500); font-size:12px }
+
+/* ============ Cards / Widgets ============ */
+.feature-card{
+  border:0; border-radius:16px; background:#fff;
+  box-shadow: var(--shadow);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.feature-card:hover{ transform: translateY(-6px); box-shadow:0 16px 30px rgba(15,34,55,.12) }
+.feature-card .card-body i{ transition: transform .25s ease }
+.feature-card:hover .card-body i{ transform: scale(1.12) }
+
+h2.section-title{
+  font-weight:800; color:var(--brand-700);
+  margin-bottom:10px;
+}
+.section-sub{
+  color:var(--ink-500); margin-bottom:28px;
+}
+
+/* ============ Tables ============ */
+.table{
+  background:#fff; box-shadow: var(--shadow);
+  border-radius:12px; overflow:hidden;
+}
+.table thead{ background:var(--brand-600); color:#fff }
+.table-striped tbody tr:nth-of-type(odd){ background:var(--brand-50) }
+.table-hover tbody tr:hover{ background:var(--brand-100) }
+
+/* ============ Buttons ============ */
+.btn-primary{
+  background:linear-gradient(90deg, var(--brand-600), var(--brand-500));
+  border:0; box-shadow: var(--shadow);
+}
+.btn-primary:hover{ opacity:.95 }
+.btn-success{ background:linear-gradient(90deg, #16a34a, #22c55e); border:0 }
+.btn-danger{ background:linear-gradient(90deg, #dc2626, #ef4444); border:0 }
+
+/* ============ Helpers ============ */
+.card-lite{ background:linear-gradient(180deg, #fff, var(--brand-50)) }
+.muted{ color:var(--ink-500) }
+.hr{ height:1px;background:var(--brand-100); margin:8px 0 }
+.hidden{ display:none !important }

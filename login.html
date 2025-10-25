@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول | شركة عدنان سماره</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Tajawal", sans-serif;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      padding: 30px;
+      text-align: center;
+    }
+    .login-card img {
+      width: 80px;
+      margin-bottom: 15px;
+    }
+    .form-control {
+      border-radius: 10px;
+    }
+    .btn-primary {
+      background: #007bff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <img src="images/logo.png" alt="logo">
+    <h4 class="fw-bold mb-4 text-primary">تسجيل الدخول</h4>
+
+    <form id="loginForm">
+      <div class="mb-3 text-start">
+        <label class="form-label">اسم المستخدم</label>
+        <input type="text" class="form-control" id="username" placeholder="أدخل اسم المستخدم" required>
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label">كلمة المرور</label>
+        <input type="password" class="form-control" id="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 mt-2">تسجيل الدخول</button>
+      <p id="error-msg" class="text-danger mt-3" style="display:none;">❌ اسم المستخدم أو كلمة المرور غير صحيحة</p>
+    </form>
+  </div>
+
+  <script>
+    const validUser = "Samara";
+    const validPass = "112233445566";
+
+    document.getElementById("loginForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      const error = document.getElementById("error-msg");
+
+      if (user === validUser && pass === validPass) {
+        localStorage.setItem("loggedIn", "true");
+        window.location.href = "index.html";
+      } else {
+        error.style.display = "block";
+      }
+    });
+  </script>
+  <script>
+  const validUser = "Samara";
+  const validPass = "112233445566";
+
+  document.getElementById("loginForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    const error = document.getElementById("error-msg");
+
+    if (user === validUser && pass === validPass) {
+      localStorage.setItem("loggedIn", "true");
+      window.location.href = "index.html";
+    } else {
+      error.style.display = "block";
+    }
+  });
+</script>
+
+
+</body>
+</html>
