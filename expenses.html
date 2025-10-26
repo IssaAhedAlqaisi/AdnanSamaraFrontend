@@ -323,5 +323,11 @@
       addNotification("تنبيه: فاتورة الكهرباء لم تُسدد بعد", "fa-triangle-exclamation", "text-warning");
     }, 1500);
   </script>
+<script>
+  if (localStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "login.html";
+  }
+</script>
+
 </body>
 </html>

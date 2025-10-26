@@ -235,6 +235,11 @@
   <!-- روابط الطباعة القديمة تُركت كما هي تحسبًا لصفحات أخرى تستعملها -->
   <link rel="stylesheet" href="css/print.css">
   <script src="js/print-helper.js"></script>
+<script>
+  if (localStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "login.html";
+  }
+</script>
 
 </body>
 </html>

@@ -47,6 +47,7 @@
       border: none;
       font-weight: 500;
       transition: 0.2s;
+      cursor: pointer;
     }
     .list-group-item.active,
     .list-group-item:hover {
@@ -96,10 +97,32 @@
       border: none;
       border-bottom: 1px solid #f1f5f9;
     }
+
+    /* Logout button */
+    .logout-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      width: 100%;
+      font-weight: 600;
+      padding: 10px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+    .logout-btn:hover {
+      background: #dc2626;
+    }
   </style>
 </head>
 
 <body>
+  <!-- 🔒 منع الدخول بدون تسجيل -->
+  <script>
+    if (localStorage.getItem("loggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
+
   <!-- Sidebar -->
   <div id="sidebar-wrapper">
     <div class="sidebar-header text-center py-4">
@@ -193,10 +216,15 @@
                 <input class="form-check-input" type="checkbox" id="backupSwitch" />
                 <label class="form-check-label" for="backupSwitch">نسخ احتياطي تلقائي</label>
               </div>
-              <div class="form-check form-switch">
+              <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" id="darkSwitch" />
                 <label class="form-check-label" for="darkSwitch">الوضع الليلي (اختياري)</label>
               </div>
+
+              <!-- 🔴 زر تسجيل الخروج -->
+              <button class="logout-btn mt-3" onclick="logout()">
+                <i class="fa-solid fa-right-from-bracket me-2"></i> تسجيل الخروج
+              </button>
             </div>
           </div>
         </div>
@@ -213,13 +241,13 @@
       pageContent.classList.toggle("expanded");
     });
 
-    // تحميل الإعدادات إن وُجدت
+    // تحميل الإعدادات
     (async function () {
       try {
         const s = await Api.get("/api/settings");
         if (s) {
           for (const k of ["company_name", "phone", "email", "address"]) {
-            if (s[k]) document.querySelector(`[name="${k}"]`).value = s[k];
+            if (s[k]) document.querySelector(`[name='${k}']`).value = s[k];
           }
           if ("notifications" in s) document.getElementById("notifSwitch").checked = !!s.notifications;
           if ("auto_backup" in s) document.getElementById("backupSwitch").checked = !!s.auto_backup;
@@ -235,6 +263,14 @@
       await Api.post("/api/settings", payload);
       alert("✅ تم حفظ الإعدادات بنجاح");
     });
+
+    // تسجيل الخروج
+    function logout() {
+      if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+        localStorage.removeItem("loggedIn");
+        window.location.href = "login.html";
+      }
+    }
 
     // إشعارات
     const notifBtn = document.getElementById("notif-btn");
@@ -270,5 +306,6 @@
       addNotification("تم تحديث إعدادات النظام بنجاح", "fa-gear", "text-success");
     }, 1500);
   </script>
+
 </body>
 </html>
