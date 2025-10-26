@@ -15,69 +15,17 @@
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Custom -->
   <style>
-    body {
-      font-family: "Cairo", sans-serif;
-      background-color: #f8fafc;
-    }
-    #sidebar-wrapper {
-      width: 250px;
-      position: fixed;
-      right: 0;
-      top: 0;
-      height: 100%;
-      background: linear-gradient(180deg, #2563eb, #1d4ed8);
-      color: white;
-      overflow-y: auto;
-      transition: all 0.3s;
-    }
-    #sidebar-wrapper.collapsed { width: 0; overflow: hidden; }
-    #page-content-wrapper { margin-right: 250px; transition: margin-right 0.3s ease; }
-    #sidebar-wrapper.collapsed + #page-content-wrapper { margin-right: 0; }
-
-    .list-group-item {
-      background: transparent;
-      color: #e0e7ff;
-      border: none;
-      font-weight: 500;
-      transition: 0.2s;
-    }
-    .list-group-item.active, .list-group-item:hover {
-      background-color: rgba(255,255,255,0.25);
-      color: #fff;
-    }
-
-    thead.table-primary {
-      background: linear-gradient(90deg, #2563eb, #1d4ed8);
-      color: #fff;
-      font-size: 15px;
-    }
-    tbody tr:hover { background-color: #eef3ff; transition: 0.2s; }
-
-    .summary-box {
-      background: linear-gradient(90deg, #22c55e, #16a34a);
-      color: #fff;
-      border-radius: 10px;
-      padding: 15px 20px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .notif-panel {
-      position: absolute;
-      background: #fff;
-      top: 100%;
-      left: 0;
-      width: 280px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      display: none;
-      z-index: 2000;
-    }
+    body { font-family: "Cairo", sans-serif; background-color: #f8fafc; }
+    #sidebar-wrapper{ width:250px; position:fixed; right:0; top:0; height:100%; background:linear-gradient(180deg,#2563eb,#1d4ed8); color:#fff; overflow-y:auto; transition:.3s }
+    #sidebar-wrapper.collapsed{ width:0; overflow:hidden }
+    #page-content-wrapper{ margin-right:250px; transition: margin-right .3s ease }
+    #sidebar-wrapper.collapsed + #page-content-wrapper{ margin-right:0 }
+    .list-group-item{ background:transparent; color:#e0e7ff; border:none; font-weight:500; transition:.2s }
+    .list-group-item.active,.list-group-item:hover{ background-color:rgba(255,255,255,.25); color:#fff }
+    thead.table-primary{ background:linear-gradient(90deg,#2563eb,#1d4ed8); color:#fff; font-size:15px }
+    tbody tr:hover{ background:#eef3ff; transition:.2s }
+    .summary-box{ background:linear-gradient(90deg,#22c55e,#16a34a); color:#fff; border-radius:10px; padding:15px 20px; box-shadow:0 3px 8px rgba(0,0,0,.1); margin-top:15px; display:flex; align-items:center; justify-content:space-between }
   </style>
 </head>
 <body>
@@ -165,8 +113,7 @@
             </div>
             <div class="col-md-4">
               <label class="form-label">🧾 النوع</label>
-              <select name="type" class="form-select" required>
-                <option value="">اختر النوع</option>
+              <select name="type" class="form-select">
                 <option value="water_sale">بيع مياه</option>
                 <option value="subscription">اشتراك</option>
                 <option value="service">خدمة إضافية</option>
@@ -178,7 +125,7 @@
             </div>
             <div class="col-md-4">
               <label class="form-label">💰 المبلغ</label>
-              <input type="number" name="amount" class="form-control" required>
+              <input type="number" name="amount" step="0.01" class="form-control" required>
             </div>
             <div class="col-md-8">
               <label class="form-label">📝 ملاحظات</label>
@@ -193,54 +140,15 @@
     </div>
   </div>
 
-  <script src="js/script.js"></script>
+  <!-- ترتيب السكربتات مهم -->
+  <script src="js/api.js"></script>          <!-- يوفر revenueAPI و API_BASE_URL --> <!-- :contentReference[oaicite:5]{index=5} -->
+  <script src="js/revenue-frontend.js"></script> <!-- من تحت: يستدعي revenueAPI ويعبي الجدول --> <!-- :contentReference[oaicite:6]{index=6} -->
   <script>
+    // زر القائمة الجانبية
     const sidebar = document.getElementById("sidebar-wrapper");
     document.getElementById("menu-toggle").addEventListener("click", () => {
       sidebar.classList.toggle("collapsed");
     });
-
-    async function loadRevenue() {
-      const tbody = document.getElementById("rows");
-      try {
-        const data = await Api.get("/api/revenue");
-        if (!data.length) {
-          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">لا توجد بيانات</td></tr>`;
-          document.getElementById("revenueCount").textContent = 0;
-          return;
-        }
-        tbody.innerHTML = data.map(r => `
-          <tr>
-            <td>${r.date || ''}</td>
-            <td>${r.type || ''}</td>
-            <td>${r.source || ''}</td>
-            <td class="fw-bold text-success">${(+r.amount || 0).toLocaleString("ar-JO")}</td>
-            <td>${r.notes || '—'}</td>
-            <td><button class="btn btn-sm btn-danger" onclick="deleteRevenue(${r.id})"><i class="fa-solid fa-trash"></i></button></td>
-          </tr>
-        `).join("");
-        document.getElementById("revenueCount").textContent = data.length;
-      } catch {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">فشل تحميل البيانات</td></tr>`;
-      }
-    }
-
-    async function deleteRevenue(id) {
-      if (!confirm("هل أنت متأكد من الحذف؟")) return;
-      await Api.del("/api/revenue/" + id);
-      loadRevenue();
-    }
-
-    document.getElementById("addForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(e.target).entries());
-      await Api.post("/api/revenue", data);
-      e.target.reset();
-      document.querySelector("#addModal .btn-close").click();
-      loadRevenue();
-    });
-
-    loadRevenue();
   </script>
 </body>
 </html>
