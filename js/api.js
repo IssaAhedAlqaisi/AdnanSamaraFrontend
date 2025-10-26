@@ -1,5 +1,6 @@
 // 🌐 قاعدة URL للخلفية - جاهزة للإصدار على Render
-const API_BASE_URL = 'https://adnansamarabackend.onrender.com/api';
+const API_BASE_URL = 'https://adnansamarabackend-1.onrender.com/api';
+
 
 // 📡 دوال عامة للاتصال بالخلفية
 const api = {
