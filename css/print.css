@@ -1,0 +1,29 @@
+/* css/print.css */
+@page { size: A4; margin: 18mm 15mm; }
+* { box-sizing: border-box; }
+html, body { direction: rtl; font-family: "Tajawal", sans-serif; color: #222; }
+.contract-sheet { width: 100%; }
+.contract-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+  border-bottom: 2px solid #0d6efd; padding-bottom: 10px;
+}
+.contract-header img { width: 60px; height: 60px; object-fit: contain; }
+.contract-header .title h2 { margin: 0; font-size: 22px; color: #0d6efd; }
+.contract-header .title small { color: #666; }
+.contract-meta {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 16px; margin: 10px 0 14px;
+  font-size: 13px; color: #444;
+}
+.contract-meta span b { color: #0d6efd; }
+.contract-body { line-height: 1.9; font-size: 15px; white-space: pre-line; }
+.contract-body p { margin: 0 0 10px; }
+.contract-body .clause { margin: 0 0 8px; }
+.contract-body .clause b { color: #0d6efd; }
+.contract-sign { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 26px; }
+.sign-box { border-top: 1px solid #999; padding-top: 8px; font-size: 14px; }
+.sign-box b { display: block; margin-bottom: 4px; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}

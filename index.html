@@ -154,6 +154,17 @@
             <p class="text-muted">عرض قاعدة بيانات العملاء</p>
           </div>
         </div>
+
+        <!-- *** الكرت الجديد: العقود الخارجية (يظهر تحت "المركبات") *** -->
+        <div class="col-md-4 col-lg-4">
+          <div class="card card-hover text-center p-4" data-bs-toggle="modal" data-bs-target="#contractsModal">
+            <div class="icon-box mb-3"><i class="bi bi-file-earmark-text"></i></div>
+            <h5 class="fw-bold">العقود الخارجية</h5>
+            <p class="text-muted">طباعة عقد توريد/عهدة باسم الشركة</p>
+          </div>
+        </div>
+        <!-- *** نهاية الكرت المضاف *** -->
+
       </div>
 
       <!-- الرسم البياني -->
@@ -200,6 +211,33 @@
     </div>
   </div>
 
+  <!-- مودال اختيار العقد للطباعة (مضاف) -->
+  <div class="modal fade" id="contractsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="bi bi-file-earmark-text me-2"></i> العقود الخارجية</h5>
+          <button class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted">اختر نوع العقد للطباعة:</p>
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" onclick="printWaterSupply()">
+              <i class="bi bi-printer me-1"></i> عقد توريد مياه
+            </button>
+            <button class="btn btn-outline-primary" onclick="printCarCustody()">
+              <i class="bi bi-printer me-1"></i> عقد استلام عهدة سيارة
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- نهاية المودال -->
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     document.getElementById("menu-toggle").addEventListener("click", () => {
@@ -220,6 +258,10 @@
       options: { responsive: true, plugins: { legend: { position: "bottom" } } }
     });
   </script>
+
+  <!-- روابط الطباعة (مضافة) -->
+  <link rel="stylesheet" href="css/print.css">
+  <script src="js/print-helper.js"></script>
 
 </body>
 </html>
