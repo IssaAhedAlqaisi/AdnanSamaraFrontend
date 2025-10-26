@@ -12,106 +12,25 @@
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 
-  <!-- Google Font -->
+  <!-- Tajawal font -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <style>
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background-color: #f9fafc;
-      transition: margin-right 0.3s ease;
-    }
-
-    /* Sidebar */
-    #sidebar-wrapper {
-      width: 250px;
-      position: fixed;
-      right: 0;
-      top: 0;
-      height: 100%;
-      background: linear-gradient(180deg, #007bff, #0056b3);
-      color: white;
-      transition: all 0.3s ease;
-      overflow-y: auto;
-    }
-    #sidebar-wrapper.collapsed {
-      width: 0;
-      overflow: hidden;
-    }
-    #page-content-wrapper {
-      margin-right: 250px;
-      transition: margin-right 0.3s ease;
-    }
-    #sidebar-wrapper.collapsed + #page-content-wrapper {
-      margin-right: 0;
-    }
-    .list-group-item {
-      background: transparent;
-      color: #e9ecef;
-      border: none;
-      font-weight: 500;
-      transition: 0.2s;
-    }
-    .list-group-item.active, .list-group-item:hover {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-    }
-
-    /* Table */
-    thead.table-primary {
-      background: linear-gradient(90deg, #007bff, #0056b3);
-      color: white;
-    }
-    tbody tr:hover {
-      background-color: #eef4ff;
-      transition: 0.2s ease-in-out;
-    }
-
-    /* Summary */
-    .summary-box {
-      background: linear-gradient(90deg, #22c55e, #16a34a);
-      color: #fff;
-      border-radius: 10px;
-      padding: 15px 20px;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    /* Buttons */
-    .btn-add {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-    }
-    .btn-add:hover { background-color: #0056b3; }
-
-    .btn-print {
-      background-color: #6c757d;
-      color: #fff;
-      border: none;
-    }
-    .btn-print:hover { background-color: #5a6268; }
-
-    /* Notifications */
-    #notif-btn:hover i {
-      color: #0056b3;
-    }
-    #notif-dot {
-      display: none;
-    }
-    #notif-box {
-      border: none;
-      border-radius: 10px;
-      background-color: #ffffff;
-    }
-    #notif-box .list-group-item {
-      font-size: 14px;
-      border: none;
-      border-bottom: 1px solid #f1f5f9;
-    }
+    body { font-family: 'Tajawal', sans-serif; background-color: #f9fafc; }
+    #sidebar-wrapper { width: 250px; position: fixed; right: 0; top: 0; height: 100%;
+      background: linear-gradient(180deg, #007bff, #0056b3); color: white; overflow-y: auto; transition:.3s }
+    #sidebar-wrapper.collapsed { width: 0; overflow: hidden; }
+    #page-content-wrapper { margin-right: 250px; transition:.3s }
+    #sidebar-wrapper.collapsed + #page-content-wrapper { margin-right: 0; }
+    .list-group-item{ background:transparent; color:#e9ecef; border:none; font-weight:500 }
+    .list-group-item.active,.list-group-item:hover{ background:rgba(255,255,255,.2); color:#fff }
+    thead.table-primary{ background:linear-gradient(90deg,#007bff,#0056b3); color:#fff }
+    tbody tr:hover{ background:#eef4ff }
+    .summary-box{ background:linear-gradient(90deg,#22c55e,#16a34a); color:#fff; border-radius:10px; padding:15px 20px; box-shadow:0 3px 8px rgba(0,0,0,.1); margin-top:15px; display:flex; align-items:center; justify-content:space-between }
+    .btn-add{ background:#007bff; color:#fff; border:none } .btn-add:hover{ background:#0056b3 }
+    .btn-print{ background:#6c757d; color:#fff; border:none } .btn-print:hover{ background:#5a6268 }
+    #notif-box{ border:none; border-radius:10px; background:#fff }
+    #notif-box .list-group-item{ font-size:14px; border:none; border-bottom:1px solid #f1f5f9 }
   </style>
 </head>
 
@@ -136,7 +55,7 @@
     </div>
   </div>
 
-  <!-- المحتوى -->
+  <!-- محتوى الصفحة -->
   <div id="page-content-wrapper">
     <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-white">
       <div class="container-fluid d-flex align-items-center justify-content-between">
@@ -149,7 +68,7 @@
         <div class="position-relative ms-auto me-3">
           <button id="notif-btn" class="btn btn-light position-relative">
             <i class="fa-solid fa-bell text-primary fs-5"></i>
-            <span id="notif-dot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+            <span id="notif-dot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display:none"></span>
           </button>
 
           <div id="notif-box" class="card shadow-sm position-absolute end-0 mt-2" style="width: 300px; display: none; z-index: 1050;">
@@ -189,7 +108,7 @@
                 <th>النوع</th>
                 <th>المصدر</th>
                 <th>ملاحظات</th>
-                <th>⚙️</th>
+                <th>حذف</th>
               </tr>
             </thead>
             <tbody id="rows">
@@ -207,29 +126,56 @@
   </div>
 
   <!-- Modal إضافة -->
-  <div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
+      <form id="addForm" class="modal-content">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title"><i class="fa-solid fa-user-plus me-2"></i> إضافة عميل جديد</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
+          <button class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
         </div>
         <div class="modal-body">
-          <form id="addForm" class="row g-3">
-            <div class="col-md-6"><label class="form-label">الاسم</label><input name="name" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label">الهاتف</label><input name="phone" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label">المنطقة</label><input name="area" class="form-control" required></div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">الاسم *</label><input name="name" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">الهاتف *</label><input name="phone" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">المنطقة *</label><input name="area" class="form-control" required></div>
             <div class="col-md-6"><label class="form-label">العنوان</label><input name="address" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label">النوع</label><input name="type" class="form-control" placeholder="منزلي / تجاري"></div>
-            <div class="col-md-6"><label class="form-label">المصدر</label><input name="source" class="form-control" placeholder="Facebook / توصية"></div>
+            <div class="col-md-6">
+              <label class="form-label">النوع</label>
+              <select name="type" class="form-select">
+                <option value="regular">عادي</option>
+                <option value="vip">VIP</option>
+                <option value="new">جديد</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">المصدر</label>
+              <select name="source" class="form-select">
+                <option value="reference">ترشيح</option>
+                <option value="advertisement">إعلان</option>
+                <option value="walkin">حضور مباشر</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">الحالة</label>
+              <select name="status" class="form-select">
+                <option value="active">نشط</option>
+                <option value="inactive">غير نشط</option>
+                <option value="vip">VIP</option>
+                <option value="new">جديد</option>
+              </select>
+            </div>
             <div class="col-md-12"><label class="form-label">ملاحظات</label><input name="notes" class="form-control"></div>
-            <div class="col-12 text-end mt-3"><button class="btn btn-add"><i class="fa-solid fa-check"></i> حفظ</button></div>
-          </form>
+          </div>
         </div>
-      </div>
+        <div class="modal-footer">
+          <button class="btn btn-add" type="submit"><i class="fa-solid fa-check"></i> حفظ</button>
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">إلغاء</button>
+        </div>
+      </form>
     </div>
   </div>
 
+  <!-- تحكم القائمة -->
   <script>
     const sidebar = document.getElementById("sidebar-wrapper");
     const pageContent = document.getElementById("page-content-wrapper");
@@ -237,84 +183,11 @@
       sidebar.classList.toggle("collapsed");
       pageContent.classList.toggle("expanded");
     });
-
-    async function loadClients() {
-      const tb = document.getElementById("rows");
-      try {
-        const data = await fetch("/api/clients").then(r => r.json());
-        if (!data.length) {
-          tb.innerHTML = `<tr><td colspan="8" class="text-muted">لا توجد بيانات</td></tr>`;
-          document.getElementById("clientCount").textContent = "0";
-          return;
-        }
-        tb.innerHTML = data.map(c => `
-          <tr>
-            <td>${c.name}</td><td>${c.phone}</td><td>${c.area}</td>
-            <td>${c.address}</td><td>${c.type}</td><td>${c.source}</td>
-            <td>${c.notes}</td>
-            <td><button class="btn btn-sm btn-danger" onclick="deleteClient(${c.id})"><i class="fa-solid fa-trash"></i></button></td>
-          </tr>`).join('');
-        document.getElementById("clientCount").textContent = data.length;
-      } catch {
-        tb.innerHTML = `<tr><td colspan="8" class="text-danger">⚠️ فشل تحميل البيانات</td></tr>`;
-      }
-    }
-
-    async function deleteClient(id) {
-      if (!confirm("هل تريد حذف هذا العميل؟")) return;
-      await fetch("/api/clients/" + id, { method: "DELETE" });
-      loadClients();
-    }
-
-    document.getElementById("addForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(e.target).entries());
-      await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-      e.target.reset();
-      document.querySelector("#addModal .btn-close").click();
-      loadClients();
-    });
-
-    loadClients();
-
-    // إشعارات
-    const notifBtn = document.getElementById("notif-btn");
-    const notifBox = document.getElementById("notif-box");
-    const notifDot = document.getElementById("notif-dot");
-    const notifList = document.getElementById("notif-list");
-    const clearNotif = document.getElementById("clearNotif");
-
-    notifBtn.addEventListener("click", () => {
-      notifBox.style.display = notifBox.style.display === "block" ? "none" : "block";
-      notifDot.style.display = "none";
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!notifBox.contains(e.target) && !notifBtn.contains(e.target)) notifBox.style.display = "none";
-    });
-
-    clearNotif.addEventListener("click", () => {
-      notifList.innerHTML = `<li class="list-group-item text-center text-muted small">لا توجد إشعارات حالياً</li>`;
-      notifDot.style.display = "none";
-    });
-
-    function addNotification(text, icon="fa-bell", color="text-primary") {
-      if (notifList.querySelector(".text-muted")) notifList.innerHTML = "";
-      notifDot.style.display = "block";
-      const li = document.createElement("li");
-      li.className = "list-group-item d-flex align-items-center";
-      li.innerHTML = `<i class="fa-solid ${icon} ${color} me-2"></i><span>${text}</span>`;
-      notifList.prepend(li);
-    }
-
-    setTimeout(() => {
-      addNotification("تمت إضافة عميل جديد", "fa-user-plus", "text-success");
-      addNotification("تذكير: متابعة عميل لم يُتواصل منذ أسبوع", "fa-clock", "text-warning");
-    }, 1500);
   </script>
+
+  <!-- مهم: api.js ثم clients-frontend.js -->
+  <script src="js/api.js"></script>
+  <script src="js/clients-frontend.js"></script>
+  <script src="js/script.js"></script>
 </body>
 </html>

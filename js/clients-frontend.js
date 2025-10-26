@@ -1,193 +1,119 @@
-// إدارة العملاء في الواجهة الأمامية
+// js/clients-frontend.js
+
+// يعتمد على clientsAPI الموجود داخل js/api.js
+// تأكد أن API_BASE_URL مضبوط على خدمة Render الصحيحة:
+// const API_BASE_URL = 'https://adnansamarabackend-1.onrender.com/api';
+
 class ClientsManager {
-    constructor() {
-        this.clients = [];
-        this.init();
-    }
+  constructor() {
+    this.clients = [];
+    this.tbody = document.getElementById('rows');
+    this.countEl = document.getElementById('clientCount');
+    this.form = document.getElementById('addForm');
+  }
 
-    async init() {
-        await this.loadClients();
-        this.setupEventListeners();
-    }
+  async init() {
+    this.bindForm();
+    await this.loadClients();
+  }
 
-    async loadClients() {
-        try {
-            this.clients = await clientsAPI.getAll();
-            this.renderClientsTable();
-            this.updateClientsStats();
-        } catch (error) {
-            console.error('Error loading clients:', error);
-            utils.showMessage('حدث خطأ في تحميل بيانات العملاء', 'error');
-        }
-    }
+  async loadClients() {
+    try {
+      const data = await clientsAPI.getAll();
+      this.clients = Array.isArray(data) ? data : [];
+      if (!this.clients.length) {
+        this.tbody.innerHTML = `<tr><td colspan="8" class="text-muted">لا توجد بيانات</td></tr>`;
+        this.countEl.textContent = '0';
+        return;
+      }
 
-    renderClientsTable() {
-        const tbody = document.getElementById('clientsTable')?.querySelector('tbody');
-        if (!tbody) return;
+      this.tbody.innerHTML = this.clients.map(c => `
+        <tr>
+          <td>${this.esc(c.name)}</td>
+          <td>${this.esc(c.phone)}</td>
+          <td>${this.esc(c.area)}</td>
+          <td>${this.esc(c.address || '-')}</td>
+          <td>${this.esc(c.type || '-')}</td>
+          <td>${this.esc(c.source || '-')}</td>
+          <td>${this.esc(c.notes || '-')}</td>
+          <td>
+            <button class="btn btn-sm btn-danger" data-id="${c.id}">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
 
-        tbody.innerHTML = this.clients.map(client => `
-            <tr>
-                <td>${client.id}</td>
-                <td>${client.name}</td>
-                <td>${client.type || 'عادي'}</td>
-                <td>${client.phone}</td>
-                <td>${client.email || '-'}</td>
-                <td>${(client.total_purchases || 0).toLocaleString('ar-EG')} دينار</td>
-                <td>${this.formatLastPurchase(client.last_purchase)}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="clientsManager.editClient(${client.id})">
-                        <i class="fa-solid fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="clientsManager.confirmDelete(${client.id})">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
+      this.countEl.textContent = this.clients.length.toString();
 
-    formatLastPurchase(date) {
-        if (!date) return '-';
-        return new Date(date).toLocaleDateString('ar-EG');
-    }
-
-    async updateClientsStats() {
-        try {
-            const stats = await clientsAPI.getStats();
-            document.getElementById('totalCustomers').textContent = `${stats.total_clients} عميل`;
-            document.getElementById('activeCustomers').textContent = `${stats.active_clients} عميل`;
-            document.getElementById('vipCustomers').textContent = `${stats.vip_clients} عميل`;
-            document.getElementById('totalSales').textContent = `${(stats.total_purchases || 0).toLocaleString('ar-EG')} دينار`;
-        } catch (error) {
-            console.error('Error loading clients stats:', error);
-        }
-    }
-
-    async saveClient(event) {
-        event.preventDefault();
-        const form = event.target;
-        const formData = new FormData(form);
-        
-        const clientData = {
-            name: formData.get('name'),
-            phone: formData.get('phone'),
-            email: formData.get('email'),
-            area: formData.get('area'),
-            address: formData.get('address'),
-            type: formData.get('customerType'),
-            notes: formData.get('notes')
-        };
-
-        try {
-            const id = formData.get('id');
-            if (id) {
-                await clientsAPI.update(id, clientData);
-                utils.showMessage('تم تحديث بيانات العميل بنجاح');
-            } else {
-                await clientsAPI.create(clientData);
-                utils.showMessage('تم إضافة العميل بنجاح');
-            }
-
-            await this.loadClients();
-            bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-            form.reset();
-        } catch (error) {
-            utils.showMessage('حدث خطأ في حفظ بيانات العميل', 'error');
-        }
-    }
-
-    async editClient(id) {
-        try {
-            const client = await clientsAPI.getById(id);
-            const form = document.getElementById('customerForm');
-            
-            form.querySelector('input[name="id"]').value = client.id;
-            form.querySelector('input[name="name"]').value = client.name;
-            form.querySelector('input[name="phone"]').value = client.phone;
-            form.querySelector('input[name="email"]').value = client.email || '';
-            form.querySelector('input[name="area"]').value = client.area || '';
-            form.querySelector('textarea[name="address"]').value = client.address || '';
-            form.querySelector('select[name="customerType"]').value = client.type || 'regular';
-            form.querySelector('textarea[name="notes"]').value = client.notes || '';
-
-            new bootstrap.Modal(document.getElementById('addCustomerModal')).show();
-        } catch (error) {
-            utils.showMessage('حدث خطأ في تحميل بيانات العميل', 'error');
-        }
-    }
-
-    confirmDelete(id) {
-        document.getElementById('deleteCustomerId').value = id;
-        new bootstrap.Modal(document.getElementById('deleteCustomerModal')).show();
-    }
-
-    async deleteClient() {
-        const id = document.getElementById('deleteCustomerId').value;
-        try {
+      // bind delete
+      this.tbody.querySelectorAll('button.btn-danger').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          if (!confirm('هل تريد حذف هذا العميل؟')) return;
+          try {
             await clientsAPI.delete(id);
-            utils.showMessage('تم حذف العميل بنجاح');
             await this.loadClients();
-            bootstrap.Modal.getInstance(document.getElementById('deleteCustomerModal')).hide();
-        } catch (error) {
-            utils.showMessage('حدث خطأ في حذف العميل', 'error');
-        }
+          } catch (e) {
+            console.error('Delete client error:', e);
+            alert('فشل حذف العميل');
+          }
+        });
+      });
+
+    } catch (err) {
+      console.error('Error loading clients:', err);
+      this.tbody.innerHTML = `<tr><td colspan="8" class="text-danger">⚠️ فشل تحميل البيانات</td></tr>`;
+      this.countEl.textContent = '0';
     }
+  }
 
-    setupEventListeners() {
-        const form = document.getElementById('customerForm');
-        if (form) {
-            form.addEventListener('submit', (e) => this.saveClient(e));
-        }
+  bindForm() {
+    if (!this.form) return;
+    this.form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this.form).entries());
 
-        const deleteBtn = document.getElementById('confirmDeleteCustomer');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => this.deleteClient());
-        }
+      const payload = {
+        name: (data.name || '').trim(),
+        phone: (data.phone || '').trim(),
+        area: (data.area || '').trim(),
+        address: data.address || '',
+        type: data.type || 'regular',
+        source: data.source || 'reference',
+        notes: data.notes || '',
+        status: data.status || 'active'
+      };
 
-        const searchInput = document.getElementById('customerSearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => this.filterClients(e.target.value));
-        }
-    }
+      if (!payload.name || !payload.phone || !payload.area) {
+        alert('الاسم والهاتف والمنطقة حقول مطلوبة');
+        return;
+      }
 
-    filterClients(searchTerm) {
-        const filtered = this.clients.filter(client =>
-            client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            client.phone.includes(searchTerm) ||
-            client.email?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        this.renderFilteredClients(filtered);
-    }
+      try {
+        await clientsAPI.create(payload);
+        // إغلاق المودال
+        const modalEl = document.getElementById('addModal');
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.hide();
 
-    renderFilteredClients(filteredClients) {
-        const tbody = document.getElementById('clientsTable')?.querySelector('tbody');
-        if (!tbody) return;
+        this.form.reset();
+        await this.loadClients();
+      } catch (err) {
+        console.error('Create client error:', err);
+        alert('فشل حفظ العميل');
+      }
+    });
+  }
 
-        tbody.innerHTML = filteredClients.map(client => `
-            <tr>
-                <td>${client.id}</td>
-                <td>${client.name}</td>
-                <td>${client.type || 'عادي'}</td>
-                <td>${client.phone}</td>
-                <td>${client.email || '-'}</td>
-                <td>${(client.total_purchases || 0).toLocaleString('ar-EG')} دينار</td>
-                <td>${this.formatLastPurchase(client.last_purchase)}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="clientsManager.editClient(${client.id})">
-                        <i class="fa-solid fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="clientsManager.confirmDelete(${client.id})">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
+  esc(v) {
+    return (v ?? '').toString().replace(/[&<>"']/g, s => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    }[s]));
+  }
 }
 
-// تهيئة مدير العملاء
-let clientsManager;
-document.addEventListener('DOMContentLoaded', function() {
-    clientsManager = new ClientsManager();
+document.addEventListener('DOMContentLoaded', () => {
+  const cm = new ClientsManager();
+  cm.init();
 });
-
