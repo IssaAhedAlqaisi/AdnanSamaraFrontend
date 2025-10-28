@@ -1,3 +1,18 @@
+
+// ✅ تفعيل القائمة الجانبية (فتح/إغلاق)
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.getElementById("sidebar-wrapper");
+  const pageContent = document.getElementById("page-content-wrapper");
+  const toggleBtn = document.getElementById("menu-toggle");
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+      pageContent.classList.toggle("expanded");
+    });
+  }
+});
+
 const API = "https://adnansamarabackend.onrender.com/api/revenue";
 
 document.addEventListener("DOMContentLoaded", () => {
