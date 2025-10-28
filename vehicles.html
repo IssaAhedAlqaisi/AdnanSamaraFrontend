@@ -25,7 +25,9 @@
     .list-group-item.active, .list-group-item:hover { background-color: rgba(255, 255, 255, 0.2); color: #fff; }
     thead.table-primary { background: linear-gradient(90deg, #2563eb, #1d4ed8); color: #fff; }
     tbody tr:hover { background-color: #f1f5ff; transform: scale(1.01); transition: all 0.2s; }
-    .summary-box { background: linear-gradient(90deg, #22c55e, #16a34a); color: #fff; border-radius: 10px; padding: 15px 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.1); margin-top: 15px; display: flex; justify-content: space-between; }
+    .summary-box { background: linear-gradient(90deg, #22c55e, #16a34a); color: #fff; border-radius: 10px; padding: 15px 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.1); margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-print { background-color: #6b7280; color: white; border: none; }
+    .btn-print:hover { background-color: #4b5563; }
   </style>
 </head>
 <body>
@@ -34,9 +36,10 @@
   <div id="sidebar-wrapper">
     <div class="sidebar-header text-center py-4">
       <img src="images/logo.png" alt="Logo" class="logo mb-2" width="80" />
-      <h5 class="fw-bold text-white">شركة عدنان سماره</h5>
-      <p class="small text-light mb-0">لنقل المياه</p>
+      <h5 class="fw-bold text-white mb-0">شركة عدنان سماره</h5>
+      <small class="text-light">لنقل المياه</small>
     </div>
+
     <div class="list-group list-group-flush mt-3">
       <a href="index.html" class="list-group-item"><i class="fa-solid fa-house me-2"></i> الشاشة الرئيسة</a>
       <a href="revenue.html" class="list-group-item"><i class="fa-solid fa-sack-dollar me-2"></i> الإيرادات</a>
@@ -49,7 +52,7 @@
     </div>
   </div>
 
-  <!-- Main content -->
+  <!-- المحتوى -->
   <div id="page-content-wrapper">
     <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-white">
       <div class="container-fluid d-flex align-items-center justify-content-between">
@@ -65,13 +68,15 @@
 
       <div class="d-flex gap-2 mb-3">
         <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal"><i class="fa-solid fa-plus"></i> إضافة مركبة</button>
-        <button class="btn btn-secondary shadow-sm" onclick="printTable('vehiclesTable')"><i class="fa-solid fa-print"></i> طباعة الجدول</button>
+        <button class="btn btn-print shadow-sm" onclick="printTable('vehiclesTable')"><i class="fa-solid fa-print"></i> طباعة الجدول</button>
       </div>
 
       <div class="card shadow-sm border-0">
         <div class="card-body">
           <table class="table table-striped text-center align-middle" id="vehiclesTable">
-            <thead class="table-primary"><tr><th>رقم اللوحة</th><th>السائق</th><th>الموقع الحالي</th><th>الحالة</th><th>⚙️</th></tr></thead>
+            <thead class="table-primary">
+              <tr><th>رقم اللوحة</th><th>السائق</th><th>الموقع الحالي</th><th>الحالة</th><th>⚙️</th></tr>
+            </thead>
             <tbody id="rows"><tr><td colspan="5" class="text-center text-muted">جارٍ تحميل البيانات...</td></tr></tbody>
           </table>
         </div>
@@ -81,28 +86,16 @@
         <div>عدد المركبات النشطة: <span id="vehicleCount">0</span></div>
         <i class="fa-solid fa-truck"></i>
       </div>
-
-      <h3 class="fw-bold mt-5 mb-3 text-primary">عداد المركبة اليومي</h3>
-      <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addLogModal"><i class="fa-solid fa-plus"></i> إضافة سجل</button>
-        <button class="btn btn-secondary shadow-sm" onclick="printTable('vehicleLogsTable')"><i class="fa-solid fa-print"></i> طباعة الجدول</button>
-      </div>
-
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <table class="table table-striped text-center align-middle" id="vehicleLogsTable">
-            <thead class="table-primary"><tr><th>📅 التاريخ</th><th>السائق</th><th>رقم المركبة</th><th>البداية</th><th>النهاية</th><th>المسافة</th></tr></thead>
-            <tbody><tr><td colspan="6" class="text-center text-muted">جارٍ تحميل البيانات...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
     </div>
   </div>
 
-  <!-- Modal إضافة مركبة -->
+  <!-- Modal إضافة -->
   <div class="modal fade" id="addModal" tabindex="-1">
     <div class="modal-dialog modal-lg"><div class="modal-content">
-      <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fa-solid fa-plus me-2"></i> إضافة مركبة جديدة</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fa-solid fa-plus me-2"></i> إضافة مركبة جديدة</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
       <div class="modal-body">
         <form id="addForm" class="row g-3">
           <div class="col-md-6"><label class="form-label">رقم اللوحة</label><input name="plate" class="form-control" required></div>
@@ -115,53 +108,86 @@
     </div></div>
   </div>
 
-  <!-- Modal سجل العداد -->
-  <div class="modal fade" id="addLogModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header bg-primary text-white"><h5 class="modal-title">إضافة سجل عداد</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        <form id="vehicleLogForm" class="row g-3">
-          <div class="col-12"><label>اسم السائق</label><select id="driverSelect" class="form-select" required></select></div>
-          <div class="col-12"><label>رقم المركبة</label><input id="vehicleNumber" class="form-control" readonly></div>
-          <div class="col-md-6"><label>عداد البداية</label><input type="number" name="odometer_start" class="form-control" required></div>
-          <div class="col-md-6"><label>عداد النهاية</label><input type="number" name="odometer_end" class="form-control" required></div>
-          <div class="col-12 text-end"><button class="btn btn-success">حفظ</button></div>
-        </form>
-      </div>
-    </div></div>
-  </div>
-
-  <script src="js/vehicles-frontend.js"></script>
+  <script src="js/script.js"></script>
   <script>
+    // فتح/إغلاق القائمة الجانبية
     document.getElementById("menu-toggle").addEventListener("click", () => {
       document.getElementById("sidebar-wrapper").classList.toggle("collapsed");
     });
 
+    // تحميل المركبات
+    async function loadVehicles() {
+      const tb = document.getElementById('rows');
+      try {
+        const res = await fetch('/api/vehicles');
+        const data = await res.json();
+        if (!data.length) {
+          tb.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا توجد بيانات</td></tr>';
+          document.getElementById("vehicleCount").textContent = '0';
+          return;
+        }
+        tb.innerHTML = data.map(v => `
+          <tr>
+            <td>${v.number}</td>
+            <td>${v.driver_name}</td>
+            <td>${v.current_location || '-'}</td>
+            <td>${v.status}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="deleteVehicle(${v.id})"><i class="fa-solid fa-trash"></i></button></td>
+          </tr>`).join('');
+        document.getElementById("vehicleCount").textContent = data.length;
+      } catch (err) {
+        tb.innerHTML = '<tr><td colspan="5" class="text-danger text-center">⚠️ فشل تحميل البيانات</td></tr>';
+      }
+    }
+
+    async function deleteVehicle(id) {
+      if (!confirm('هل أنت متأكد من حذف هذه المركبة؟')) return;
+      await fetch('/api/vehicles/' + id, { method: 'DELETE' });
+      loadVehicles();
+    }
+
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        number: fd.get('plate'),
+        driver_name: fd.get('driver'),
+        current_location: fd.get('location'),
+        status: fd.get('status')
+      };
+      await fetch('/api/vehicles', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+      e.target.reset();
+      document.querySelector('#addModal .btn-close').click();
+      loadVehicles();
+    });
+
+    loadVehicles();
+
+    // ✅ طباعة الجدول فقط
     function printTable(tableId) {
       const table = document.getElementById(tableId);
       if (!table) return alert("⚠️ لم يتم العثور على الجدول.");
 
-      const printWin = window.open('', '_blank');
-      printWin.document.write(`
+      const w = window.open('', '_blank', 'width=900,height=700');
+      w.document.write(`
         <html lang="ar" dir="rtl">
           <head>
             <title>طباعة الجدول</title>
             <style>
-              body { font-family: "Cairo", sans-serif; text-align: center; margin: 20px; }
-              table { border-collapse: collapse; width: 100%; direction: rtl; }
+              body { font-family: "Cairo", sans-serif; margin: 40px; direction: rtl; text-align: center; }
+              table { border-collapse: collapse; width: 100%; font-size: 16px; }
               th, td { border: 1px solid #ccc; padding: 8px; }
               th { background: #2563eb; color: white; }
             </style>
           </head>
           <body>
+            <h2>شركة عدنان سماره لنقل المياه 🚚</h2>
             ${table.outerHTML}
           </body>
         </html>
       `);
-      printWin.document.close();
-      printWin.focus();
-      printWin.print();
-      printWin.close();
+      w.document.close();
+      w.onload = () => { w.print(); w.close(); };
     }
   </script>
 </body>
