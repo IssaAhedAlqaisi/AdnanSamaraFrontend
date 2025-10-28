@@ -1,3 +1,5 @@
+// frontend/js/vehicles-frontend.js
+
 document.addEventListener("DOMContentLoaded", () => {
   loadVehicles();
   populateDrivers();
@@ -10,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const f = e.target;
 
-      // تأكد أن أسماء الحقول بالـ HTML: plate, driver, location, status
       const data = {
         number: (f.plate?.value || '').trim(),
         driver_name: (f.driver?.value || '').trim(),
@@ -27,14 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        await Api.post('/api/vehicles', data);
+        await api.post('/vehicles', data); // استخدام api الموحد
         f.reset();
-
-        // اغلاق المودال
-        const closeBtn = document.querySelector('#addModal .btn-close');
-        if (closeBtn) closeBtn.click();
-
-        // تحديث الجداول والقوائم
+        document.querySelector('#addModal .btn-close')?.click();
         await loadVehicles();
         await populateDrivers();
       } catch (err) {
@@ -63,10 +59,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        await Api.post('/api/vehicles/logs', data);
+        await api.post('/vehicles/logs', data);
         f.reset();
-        const closeBtn = document.querySelector('#addLogModal .btn-close');
-        if (closeBtn) closeBtn.click();
+        document.querySelector('#addLogModal .btn-close')?.click();
         await loadVehicleLogs();
       } catch (err) {
         console.error('Add vehicle log error:', err);
@@ -81,10 +76,10 @@ async function loadVehicles() {
   if (!tb) return;
 
   try {
-    const list = await Api.get('/api/vehicles');
+    const list = await api.get('/vehicles');
     if (!Array.isArray(list) || !list.length) {
       tb.innerHTML = `<tr><td colspan="5" class="text-muted">لا توجد مركبات</td></tr>`;
-      document.getElementById("vehicleCount")?.textContent = '0';
+      document.getElementById("vehicleCount") && (document.getElementById("vehicleCount").textContent = '0');
       return;
     }
 
@@ -108,7 +103,7 @@ async function loadVehicles() {
 async function delVehicle(id) {
   if (!confirm("هل أنت متأكد من حذف هذه المركبة؟")) return;
   try {
-    await Api.del('/api/vehicles/' + id);
+    await api.delete('/vehicles/' + id);
     await loadVehicles();
     await populateDrivers();
   } catch (err) {
@@ -122,7 +117,7 @@ async function loadVehicleLogs() {
   if (!tbody) return;
 
   try {
-    const logs = await Api.get('/api/vehicles/logs');
+    const logs = await api.get('/vehicles/logs');
     if (!Array.isArray(logs) || !logs.length) {
       tbody.innerHTML = `<tr><td colspan="6" class="text-muted">لا توجد سجلات</td></tr>`;
       return;
@@ -148,7 +143,7 @@ async function populateDrivers() {
   if (!select) return;
 
   try {
-    const vehicles = await Api.get('/api/vehicles');
+    const vehicles = await api.get('/vehicles');
     if (!Array.isArray(vehicles) || !vehicles.length) {
       select.innerHTML = `<option value="">لا توجد مركبات</option>`;
       const vn = document.getElementById('vehicleNumber');
@@ -162,7 +157,6 @@ async function populateDrivers() {
       </option>
     `).join('');
 
-    // عند تغيير السائق، عبّي رقم المركبة تلقائي
     select.addEventListener('change', e => {
       const opt = e.target.selectedOptions[0];
       document.getElementById('vehicleNumber').value = opt?.dataset?.number || '';
@@ -177,7 +171,7 @@ async function populateDrivers() {
   }
 }
 
-// حماية بسيطة من إدخال HTML
+// حماية بسيطة
 function escapeHtml(v) {
   return (v ?? '').toString().replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[s]));
 }

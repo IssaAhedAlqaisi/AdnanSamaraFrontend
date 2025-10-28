@@ -1,178 +1,112 @@
-// 🌐 قاعدة URL للخلفية - جاهزة للإصدار على Render
+// 🌐 قاعدة URL للخلفية - Render (انتبه لوجود -1)
 const API_BASE_URL = 'https://adnansamarabackend-1.onrender.com/api';
 
-
-// 📡 دوال عامة للاتصال بالخلفية
+/* ─────────────────────────────
+   📡 طبقة طلبات عامة (GET/POST/PUT/DELETE)
+   ───────────────────────────── */
 const api = {
-    // دالة GET عامة
-    async get(endpoint) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            return await response.json();
-        } catch (error) {
-            console.error('GET Error:', error);
-            throw error;
-        }
-    },
-
-    // دالة POST عامة
-    async post(endpoint, data) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-            if (!response.ok) throw new Error('Network response was not ok');
-            return await response.json();
-        } catch (error) {
-            console.error('POST Error:', error);
-            throw error;
-        }
-    },
-
-    // دالة PUT عامة
-    async put(endpoint, data) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-            if (!response.ok) throw new Error('Network response was not ok');
-            return await response.json();
-        } catch (error) {
-            console.error('PUT Error:', error);
-            throw error;
-        }
-    },
-
-    // دالة DELETE عامة
-    async delete(endpoint) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'DELETE'
-            });
-            if (!response.ok) throw new Error('Network response was not ok');
-            return await response.json();
-        } catch (error) {
-            console.error('DELETE Error:', error);
-            throw error;
-        }
-    }
+  async get(endpoint) {
+    const r = await fetch(`${API_BASE_URL}${endpoint}`);
+    return handle(r);
+  },
+  async post(endpoint, data) {
+    const r = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handle(r);
+  },
+  async put(endpoint, data) {
+    const r = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handle(r);
+  },
+  async delete(endpoint) {
+    const r = await fetch(`${API_BASE_URL}${endpoint}`, { method: 'DELETE' });
+    return handle(r);
+  }
 };
 
-// 👥 دوال خاصة بالعملاء
+// 🧰 هيلبر موحّد للتعامل مع الاستجابات (حتى الأخطاء ترجع JSON مفهوم)
+async function handle(res) {
+  let body = null;
+  try { body = await res.json(); } catch { body = null; }
+  if (!res.ok) {
+    const msg = (body && (body.error || body.message)) || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return body;
+}
+
+/* ─────────────────────────────
+   👥 العملاء
+   ───────────────────────────── */
 const clientsAPI = {
-    async getAll() {
-        return await api.get('/clients');
-    },
-
-    async getById(id) {
-        return await api.get(`/clients/${id}`);
-    },
-
-    async create(clientData) {
-        return await api.post('/clients', clientData);
-    },
-
-    async update(id, clientData) {
-        return await api.put(`/clients/${id}`, clientData);
-    },
-
-    async delete(id) {
-        return await api.delete(`/clients/${id}`);
-    },
-
-    async getStats() {
-        return await api.get('/clients/stats/summary');
-    }
+  getAll:   () => api.get('/clients'),
+  getById:  (id) => api.get(`/clients/${id}`),
+  create:   (data) => api.post('/clients', data),
+  update:   (id, data) => api.put(`/clients/${id}`, data),
+  delete:   (id) => api.delete(`/clients/${id}`),
+  getStats: () => api.get('/clients/stats/summary')
 };
 
-// 👨‍🔧 دوال خاصة بالموظفين
+/* ─────────────────────────────
+   👨‍🔧 الموظفون
+   ───────────────────────────── */
 const employeesAPI = {
-    async getAll() {
-        return await api.get('/employees');
-    },
-
-    async create(employeeData) {
-        return await api.post('/employees', employeeData);
-    },
-
-    async update(id, employeeData) {
-        return await api.put(`/employees/${id}`, employeeData);
-    },
-
-    async delete(id) {
-        return await api.delete(`/employees/${id}`);
-    },
-
-    async getStats() {
-        return await api.get('/employees/stats/summary');
-    }
+  getAll:   () => api.get('/employees'),
+  create:   (data) => api.post('/employees', data),
+  update:   (id, data) => api.put(`/employees/${id}`, data),
+  delete:   (id) => api.delete(`/employees/${id}`),
+  getStats: () => api.get('/employees/stats/summary')
 };
 
-// 💰 دوال خاصة بالإيرادات
+/* ─────────────────────────────
+   💰 الإيرادات
+   ───────────────────────────── */
 const revenueAPI = {
-    async getAll() {
-        return await api.get('/revenue');
-    },
-
-    async create(revenueData) {
-        return await api.post('/revenue', revenueData);
-    },
-
-    async update(id, revenueData) {
-        return await api.put(`/revenue/${id}`, revenueData);
-    },
-
-    async delete(id) {
-        return await api.delete(`/revenue/${id}`);
-    },
-
-    async getStats(period = 'month') {
-        return await api.get(`/revenue/stats/summary?period=${period}`);
-    }
+  getAll:   () => api.get('/revenue'),
+  create:   (data) => api.post('/revenue', data),
+  update:   (id, data) => api.put(`/revenue/${id}`, data),
+  delete:   (id) => api.delete(`/revenue/${id}`),
+  getStats: (period = 'month') => api.get(`/revenue/stats/summary?period=${period}`)
 };
 
-// 🚚 دوال خاصة بالموردين
+/* ─────────────────────────────
+   🚚 الموردون
+   ───────────────────────────── */
 const suppliersAPI = {
-    async getAll() {
-        return await api.get('/suppliers');
-    },
-
-    async create(supplierData) {
-        return await api.post('/suppliers', supplierData);
-    }
+  getAll: () => api.get('/suppliers'),
+  create: (data) => api.post('/suppliers', data),
+  update: (id, data) => api.put(`/suppliers/${id}`, data),
+  delete: (id) => api.delete(`/suppliers/${id}`)
 };
 
-// 🚛 دوال خاصة بالمركبات
+/* ─────────────────────────────
+   🚛 المركبات
+   ───────────────────────────── */
 const vehiclesAPI = {
-    async getAll() {
-        return await api.get('/vehicles');
-    },
+  getAll:    () => api.get('/vehicles'),
+  create:    (data) => api.post('/vehicles', data),
+  update:    (id, data) => api.put(`/vehicles/${id}`, data),
+  delete:    (id) => api.delete(`/vehicles/${id}`),
 
-    async create(vehicleData) {
-        return await api.post('/vehicles', vehicleData);
-    }
+  // سجلات المركبات (لو عندك routes لها)
+  getLogs:   () => api.get('/vehicles/logs'),
+  createLog: (data) => api.post('/vehicles/logs', data),
+  // ممكن تضيف update/delete للسجلات إذا لزم
 };
 
-// 💸 دوال خاصة بالمصاريف
+/* ─────────────────────────────
+   💸 المصاريف
+   ───────────────────────────── */
 const expensesAPI = {
-    async getAll() {
-        return await api.get('/expenses');
-    },
-
-    async create(expenseData) {
-        return await api.post('/expenses', expenseData);
-    },
-
-    async delete(id) {
-        return await api.delete(`/expenses/${id}`);
-    }
+  getAll:  () => api.get('/expenses'),
+  create:  (data) => api.post('/expenses', data),
+  update:  (id, data) => api.put(`/expenses/${id}`, data),
+  delete:  (id) => api.delete(`/expenses/${id}`)
 };
