@@ -3,76 +3,120 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🚚 المركبات | شركة عدنان سماره</title>
+  <title>🚚 المركبات | شركة عدنان سماره لنقل المياه</title>
+
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+  <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+
   <style>
-    body {font-family:"Cairo",sans-serif;background:#f9fafc;}
-    thead.table-primary{background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff}
-    tbody tr:hover{background:#f1f5ff;transition:.2s}
-    .summary-box{background:linear-gradient(90deg,#22c55e,#16a34a);color:#fff;border-radius:10px;padding:15px;margin-top:15px;display:flex;justify-content:space-between}
+    body { font-family: "Cairo", sans-serif; background-color: #f9fafc; transition: margin-right 0.3s ease; }
+    #sidebar-wrapper { width: 250px; position: fixed; right: 0; top: 0; height: 100%; background: linear-gradient(180deg, #2563eb, #1d4ed8); color: white; overflow-y: auto; transition: all 0.3s; }
+    #sidebar-wrapper.collapsed { width: 0; overflow: hidden; }
+    #page-content-wrapper { margin-right: 250px; transition: margin-right 0.3s ease; }
+    #sidebar-wrapper.collapsed + #page-content-wrapper { margin-right: 0; }
+    .list-group-item { background: transparent; color: #e0e7ff; border: none; font-weight: 500; }
+    .list-group-item.active, .list-group-item:hover { background-color: rgba(255, 255, 255, 0.2); color: #fff; }
+    thead.table-primary { background: linear-gradient(90deg, #2563eb, #1d4ed8); color: #fff; }
+    tbody tr:hover { background-color: #f1f5ff; transform: scale(1.01); transition: all 0.2s; }
+    .summary-box { background: linear-gradient(90deg, #22c55e, #16a34a); color: #fff; border-radius: 10px; padding: 15px 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.1); margin-top: 15px; display: flex; justify-content: space-between; }
   </style>
 </head>
 <body>
-  <div class="container py-4">
-    <h2 class="fw-bold text-primary mb-4">🚛 إدارة المركبات</h2>
 
-    <div class="mb-3 d-flex gap-2">
-      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal"><i class="fa-solid fa-plus"></i> إضافة مركبة</button>
-      <button class="btn btn-secondary" onclick="printTable('vehiclesTable')"><i class="fa-solid fa-print"></i> طباعة الجدول</button>
+  <!-- Sidebar -->
+  <div id="sidebar-wrapper">
+    <div class="sidebar-header text-center py-4">
+      <img src="images/logo.png" alt="Logo" class="logo mb-2" width="80" />
+      <h5 class="fw-bold text-white">شركة عدنان سماره</h5>
+      <p class="small text-light mb-0">لنقل المياه</p>
     </div>
-
-    <div class="card shadow-sm border-0 mb-4">
-      <div class="card-body">
-        <table class="table table-striped text-center align-middle" id="vehiclesTable">
-          <thead class="table-primary"><tr><th>رقم اللوحة</th><th>السائق</th><th>الموقع الحالي</th><th>الحالة</th><th>⚙️</th></tr></thead>
-          <tbody id="rows"><tr><td colspan="5" class="text-muted">جارٍ التحميل...</td></tr></tbody>
-        </table>
-      </div>
+    <div class="list-group list-group-flush mt-3">
+      <a href="index.html" class="list-group-item"><i class="fa-solid fa-house me-2"></i> الشاشة الرئيسة</a>
+      <a href="revenue.html" class="list-group-item"><i class="fa-solid fa-sack-dollar me-2"></i> الإيرادات</a>
+      <a href="expenses.html" class="list-group-item"><i class="fa-solid fa-money-bill-wave me-2"></i> المصاريف</a>
+      <a href="employees.html" class="list-group-item"><i class="fa-solid fa-users me-2"></i> الموظفين</a>
+      <a href="vehicles.html" class="list-group-item active"><i class="fa-solid fa-truck-droplet me-2"></i> المركبات</a>
+      <a href="suppliers.html" class="list-group-item"><i class="fa-solid fa-truck-field me-2"></i> الموردون</a>
+      <a href="customers.html" class="list-group-item"><i class="fa-solid fa-user-tie me-2"></i> العملاء</a>
+      <a href="settings.html" class="list-group-item"><i class="fa-solid fa-gear me-2"></i> الإعدادات</a>
     </div>
+  </div>
 
-    <div class="summary-box">
-      <div>عدد المركبات النشطة: <span id="vehicleCount">0</span></div>
-      <i class="fa-solid fa-truck"></i>
-    </div>
-
-    <!-- عداد المركبة -->
-    <div class="card shadow-sm border-0 mt-5">
-      <div class="card-header bg-primary text-white d-flex justify-content-between">
-        <h5 class="mb-0"><i class="fa-solid fa-gauge"></i> عداد المركبة اليومي</h5>
-        <div class="d-flex gap-2">
-          <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addLogModal"><i class="fa-solid fa-plus text-primary"></i> إضافة سجل</button>
-          <button class="btn btn-light btn-sm" onclick="printTable('vehicleLogsTable')"><i class="fa-solid fa-print text-primary"></i> طباعة الجدول</button>
+  <!-- Main content -->
+  <div id="page-content-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-white">
+      <div class="container-fluid d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-outline-primary me-2" id="menu-toggle"><i class="fa-solid fa-bars"></i></button>
+          <span class="navbar-brand fw-bold text-primary mb-0">قسم المركبات 🚚</span>
         </div>
       </div>
-      <div class="card-body">
-        <table class="table table-striped text-center align-middle" id="vehicleLogsTable">
-          <thead class="table-primary"><tr><th>📅 التاريخ</th><th>السائق</th><th>رقم المركبة</th><th>البداية</th><th>النهاية</th><th>المسافة</th></tr></thead>
-          <tbody><tr><td colspan="6" class="text-muted">جارٍ التحميل...</td></tr></tbody>
-        </table>
+    </nav>
+
+    <div class="container-fluid py-5 px-4">
+      <h2 class="fw-bold mb-4 text-primary">قائمة المركبات</h2>
+
+      <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal"><i class="fa-solid fa-plus"></i> إضافة مركبة</button>
+        <button class="btn btn-secondary shadow-sm" onclick="printTable('vehiclesTable')"><i class="fa-solid fa-print"></i> طباعة الجدول</button>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <table class="table table-striped text-center align-middle" id="vehiclesTable">
+            <thead class="table-primary"><tr><th>رقم اللوحة</th><th>السائق</th><th>الموقع الحالي</th><th>الحالة</th><th>⚙️</th></tr></thead>
+            <tbody id="rows"><tr><td colspan="5" class="text-center text-muted">جارٍ تحميل البيانات...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <div>عدد المركبات النشطة: <span id="vehicleCount">0</span></div>
+        <i class="fa-solid fa-truck"></i>
+      </div>
+
+      <!-- سجل العدادات -->
+      <h3 class="fw-bold mt-5 mb-3 text-primary">عداد المركبة اليومي</h3>
+      <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addLogModal"><i class="fa-solid fa-plus"></i> إضافة سجل</button>
+        <button class="btn btn-secondary shadow-sm" onclick="printTable('vehicleLogsTable')"><i class="fa-solid fa-print"></i> طباعة الجدول</button>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <table class="table table-striped text-center align-middle" id="vehicleLogsTable">
+            <thead class="table-primary"><tr><th>📅 التاريخ</th><th>السائق</th><th>رقم المركبة</th><th>البداية</th><th>النهاية</th><th>المسافة</th></tr></thead>
+            <tbody><tr><td colspan="6" class="text-center text-muted">جارٍ تحميل البيانات...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal إضافة -->
+  <!-- Modal إضافة مركبة -->
   <div class="modal fade" id="addModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header bg-primary text-white"><h5 class="modal-title">إضافة مركبة</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fa-solid fa-plus me-2"></i> إضافة مركبة جديدة</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
         <form id="addForm" class="row g-3">
-          <div class="col-md-6"><label>رقم اللوحة</label><input name="plate" class="form-control" required></div>
-          <div class="col-md-6"><label>اسم السائق</label><input name="driver" class="form-control" required></div>
-          <div class="col-md-8"><label>الموقع الحالي</label><input name="location" class="form-control"></div>
-          <div class="col-md-4"><label>الحالة</label><input name="status" class="form-control" value="نشطة"></div>
-          <div class="col-12 text-end"><button class="btn btn-success">حفظ</button></div>
+          <div class="col-md-6"><label class="form-label">رقم اللوحة</label><input name="plate" class="form-control" required></div>
+          <div class="col-md-6"><label class="form-label">اسم السائق</label><input name="driver" class="form-control" required></div>
+          <div class="col-md-8"><label class="form-label">الموقع الحالي</label><input name="location" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label">الحالة</label><input name="status" class="form-control" value="نشطة"></div>
+          <div class="col-12 text-end mt-3"><button class="btn btn-success"><i class="fa-solid fa-check"></i> حفظ</button></div>
         </form>
       </div>
     </div></div>
   </div>
 
-  <!-- Modal عداد -->
+  <!-- Modal سجل العداد -->
   <div class="modal fade" id="addLogModal" tabindex="-1">
     <div class="modal-dialog"><div class="modal-content">
       <div class="modal-header bg-primary text-white"><h5 class="modal-title">إضافة سجل عداد</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -90,10 +134,13 @@
 
   <script src="js/vehicles-frontend.js"></script>
   <script>
+    document.getElementById("menu-toggle").addEventListener("click", () => {
+      document.getElementById("sidebar-wrapper").classList.toggle("collapsed");
+    });
     function printTable(tableId){
-      const table = document.getElementById(tableId).outerHTML;
+      const t = document.getElementById(tableId).outerHTML;
       const w = window.open('');
-      w.document.write('<html><head><title>طباعة</title></head><body>'+table+'</body></html>');
+      w.document.write('<html><head><title>طباعة الجدول</title></head><body>'+t+'</body></html>');
       w.print(); w.close();
     }
   </script>
