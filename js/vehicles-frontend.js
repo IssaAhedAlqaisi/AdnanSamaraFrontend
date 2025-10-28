@@ -1,17 +1,25 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const sidebar = document.getElementById("sidebar-wrapper");
-  const pageContent = document.getElementById("page-content-wrapper");
-  const toggleBtn = document.getElementById("menu-toggle");
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", () => {
-      sidebar.classList.toggle("collapsed");
-      pageContent.classList.toggle("expanded");
-    });
-  }
-
   loadVehicles();
   populateDrivers();
   loadVehicleLogs();
+
+  document.getElementById('addForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const data = {
+      number: f.plate.value,
+      driver_name: f.driver.value,
+      current_location: f.location.value,
+      capacity: "",
+      model: "",
+      status: f.status.value,
+      notes: ""
+    };
+    await Api.post('/api/vehicles', data);
+    f.reset();
+    document.querySelector('#addModal .btn-close').click();
+    loadVehicles();
+  });
 
   document.getElementById('vehicleLogForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -54,7 +62,6 @@ async function delVehicle(id) {
   loadVehicles();
 }
 
-/* ============= 🚚 Vehicle Logs ============= */
 async function loadVehicleLogs() {
   const tbody = document.querySelector('#vehicleLogsTable tbody');
   try {
