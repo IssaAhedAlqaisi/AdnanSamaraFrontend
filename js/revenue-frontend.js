@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-const API = "https://adnansamarabackend.onrender.com/api/revenue";
+const API = "https://adnansamarabackend-1.onrender.com/api/revenue"; 
 
 document.addEventListener("DOMContentLoaded", () => {
   // التاريخ التلقائي
