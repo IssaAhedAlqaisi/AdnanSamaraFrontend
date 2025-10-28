@@ -1,141 +1,95 @@
-// إدارة المركبات في الواجهة الأمامية
-class VehiclesManager {
-    constructor() {
-        this.vehicles = [];
-        this.init();
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.getElementById("sidebar-wrapper");
+  const pageContent = document.getElementById("page-content-wrapper");
+  const toggleBtn = document.getElementById("menu-toggle");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+      pageContent.classList.toggle("expanded");
+    });
+  }
+
+  loadVehicles();
+  populateDrivers();
+  loadVehicleLogs();
+
+  document.getElementById('vehicleLogForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const data = {
+      driver_name: f.driverSelect.value,
+      vehicle_number: f.vehicleNumber.value,
+      odometer_start: f.odometer_start.value,
+      odometer_end: f.odometer_end.value
+    };
+    await Api.post('/api/vehicles/logs', data);
+    f.reset();
+    document.querySelector('#addLogModal .btn-close').click();
+    loadVehicleLogs();
+  });
+});
+
+async function loadVehicles() {
+  const tb = document.getElementById('rows');
+  try {
+    const list = await Api.get('/api/vehicles');
+    tb.innerHTML = list.map(v => `
+      <tr>
+        <td>${v.number}</td>
+        <td>${v.driver_name}</td>
+        <td>${v.current_location || ''}</td>
+        <td>${v.status}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="delVehicle(${v.id})"><i class="fa-solid fa-trash"></i></button></td>
+      </tr>
+    `).join('');
+    document.getElementById("vehicleCount").textContent = list.length;
+  } catch {
+    tb.innerHTML = `<tr><td colspan="5" class="text-danger">⚠️ فشل تحميل البيانات</td></tr>`;
+  }
+}
+
+async function delVehicle(id) {
+  if (!confirm("هل أنت متأكد من حذف هذه المركبة؟")) return;
+  await Api.del('/api/vehicles/' + id);
+  loadVehicles();
+}
+
+/* ============= 🚚 Vehicle Logs ============= */
+async function loadVehicleLogs() {
+  const tbody = document.querySelector('#vehicleLogsTable tbody');
+  try {
+    const logs = await Api.get('/api/vehicles/logs');
+    if (!logs.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-muted">لا توجد سجلات</td></tr>`;
+      return;
     }
+    tbody.innerHTML = logs.map(l => `
+      <tr>
+        <td>${l.date}</td>
+        <td>${l.driver_name}</td>
+        <td>${l.vehicle_number}</td>
+        <td>${l.odometer_start || 0}</td>
+        <td>${l.odometer_end || 0}</td>
+        <td>${(l.distance || 0).toFixed(2)}</td>
+      </tr>
+    `).join('');
+  } catch {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-danger">⚠️ خطأ بالتحميل</td></tr>`;
+  }
+}
 
-    async init() {
-        await this.loadVehicles();
-        this.setupEventListeners();
-    }
-
-    async loadVehicles() {
-        try {
-            this.vehicles = await vehiclesAPI.getAll();
-            this.renderVehiclesTable();
-            this.updateVehiclesStats();
-        } catch (error) {
-            console.error('Error loading vehicles:', error);
-            utils.showMessage('حدث خطأ في تحميل بيانات المركبات', 'error');
-            // بيانات تجريبية
-            this.vehicles = [
-                { id: 1, number: "V-001", driver_name: "محمد أحمد", current_location: "غزة - الرمال", status: "active" },
-                { id: 2, number: "V-002", driver_name: "أحمد محمود", current_location: "غزة - تل الهوا", status: "active" }
-            ];
-            this.renderVehiclesTable();
-            this.updateVehiclesStats();
-        }
-    }
-
-    renderVehiclesTable() {
-        const tbody = document.getElementById('vehiclesTable')?.querySelector('tbody');
-        if (!tbody) return;
-
-        tbody.innerHTML = this.vehicles.map(vehicle => `
-            <tr>
-                <td>${vehicle.number}</td>
-                <td>${vehicle.driver_name}</td>
-                <td>${vehicle.current_location || 'غير محدد'}</td>
-                <td><span class="badge ${this.getStatusClass(vehicle.status)}">${this.getStatusText(vehicle.status)}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="vehiclesManager.editVehicle(${vehicle.id})">
-                        <i class="fa-solid fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="vehiclesManager.confirmDelete(${vehicle.id})">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                    <button class="btn btn-sm btn-info" onclick="vehiclesManager.trackVehicle(${vehicle.id})">
-                        <i class="fa-solid fa-map-marker-alt"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    getStatusClass(status) {
-        const classes = {
-            'active': 'bg-success',
-            'maintenance': 'bg-warning text-dark',
-            'inactive': 'bg-secondary',
-            'broken': 'bg-danger'
-        };
-        return classes[status] || 'bg-secondary';
-    }
-
-    getStatusText(status) {
-        const texts = {
-            'active': 'نشطة',
-            'maintenance': 'تحت الصيانة',
-            'inactive': 'غير نشطة',
-            'broken': 'معطلة'
-        };
-        return texts[status] || status;
-    }
-
-    updateVehiclesStats() {
-        const totalVehicles = this.vehicles.length;
-        const activeVehicles = this.vehicles.filter(v => v.status === 'active').length;
-        const maintenanceVehicles = this.vehicles.filter(v => v.status === 'maintenance').length;
-        const latestLocation = this.vehicles.find(v => v.status === 'active')?.current_location || '-';
-
-        document.getElementById('activeVehicles').textContent = `${activeVehicles} مركبات في الخدمة`;
-        document.getElementById('maintenanceVehicles').textContent = `${maintenanceVehicles} مركبة`;
-        document.getElementById('latestLocation').textContent = latestLocation;
-    }
-
-    async saveVehicle(event) {
-        event.preventDefault();
-        const form = event.target;
-        const formData = new FormData(form);
-        
-        const vehicleData = {
-            number: formData.get('number'),
-            driver_name: formData.get('driver_name'),
-            current_location: formData.get('current_location'),
-            status: formData.get('status'),
-            capacity: formData.get('capacity'),
-            model: formData.get('model'),
-            notes: formData.get('notes')
-        };
-
-        try {
-            const id = formData.get('id');
-            if (id) {
-                await vehiclesAPI.update(id, vehicleData);
-                utils.showMessage('تم تحديث بيانات المركبة بنجاح');
-            } else {
-                await vehiclesAPI.create(vehicleData);
-                utils.showMessage('تم إضافة المركبة بنجاح');
-            }
-
-            await this.loadVehicles();
-            bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-            form.reset();
-        } catch (error) {
-            console.error('Error saving vehicle:', error);
-            utils.showMessage('حدث خطأ في حفظ بيانات المركبة', 'error');
-        }
-    }
-
-    editVehicle(id) {
-        const vehicle = this.vehicles.find(v => v.id === id);
-        if (!vehicle) return;
-
-        const form = document.getElementById('vehicleForm');
-        form.querySelector('input[name="id"]').value = vehicle.id;
-        form.querySelector('input[name="number"]').value = vehicle.number;
-        form.querySelector('input[name="driver_name"]').value = vehicle.driver_name;
-        form.querySelector('input[name="current_location"]').value = vehicle.current_location || '';
-        form.querySelector('select[name="status"]').value = vehicle.status;
-        form.querySelector('input[name="capacity"]').value = vehicle.capacity || '';
-        form.querySelector('input[name="model"]').value = vehicle.model || '';
-        form.querySelector('textarea[name="notes"]').value = vehicle.notes || '';
-
-        new bootstrap.Modal(document.getElementById('addVehicleModal')).show();
-    }
-
-    trackVehicle(id) {
-        const vehicle = this.vehicles.find(v => v.id === id);
-        if (vehicle) {
-            utils.showMessage(`تتبع المرك
+async function populateDrivers() {
+  const select = document.getElementById('driverSelect');
+  const vehicles = await Api.get('/api/vehicles');
+  select.innerHTML = vehicles.map(v => `
+    <option value="${v.driver_name}" data-number="${v.number}">${v.driver_name}</option>
+  `).join('');
+  select.addEventListener('change', e => {
+    const opt = e.target.selectedOptions[0];
+    document.getElementById('vehicleNumber').value = opt.dataset.number || '';
+  });
+  if (vehicles.length) {
+    select.value = vehicles[0].driver_name;
+    document.getElementById('vehicleNumber').value = vehicles[0].number;
+  }
+}
