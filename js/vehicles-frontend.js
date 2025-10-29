@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadVehicles();
   });
 
-  // 🧾 إضافة سجل يومي
+  // 🧾 إضافة سجل يومي (عداد)
   document.getElementById('vehicleLogForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.target;
@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
       odometer_end: f.odometer_end.value
     };
 
-    // بدون alert مزعج
     if (!data.driver_name || !data.vehicle_number) {
       console.warn("⚠️ Missing driver or vehicle — skipped");
       return;
