@@ -1,3 +1,4 @@
+// frontend/js/api.js
 // 🌐 قاعدة URL للخلفية - Render (انتبه لوجود -1)
 const API_BASE_URL = 'https://adnansamarabackend-1.onrender.com/api';
 
@@ -102,13 +103,14 @@ const vehiclesAPI = {
    💸 المصاريف + أنواع المصاريف
    ───────────────────────────── */
 const expensesAPI = {
+  // المصاريف
   getAll:  () => api.get('/expenses'),
   create:  (data) => api.post('/expenses', data),
   update:  (id, data) => api.put(`/expenses/${id}`, data),
   delete:  (id) => api.delete(`/expenses/${id}`),
 
   // أنواع المصاريف
-  getTypes: () => api.get('/expenses/types'),
-  addType:  (name) => api.post('/expenses/types', { name }),
+  getTypes:   () => api.get('/expenses/types'),
+  createType: (data) => api.post('/expenses/types', data),   // { name }
   deleteType: (id) => api.delete(`/expenses/types/${id}`)
 };
