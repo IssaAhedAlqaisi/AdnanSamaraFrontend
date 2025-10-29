@@ -45,7 +45,8 @@ async function loadRevenue() {
     const list = await api.get("/revenue");
     if (!list.length) {
       tb.innerHTML = `<tr><td colspan="8" class="text-center text-muted">لا توجد بيانات</td></tr>`;
-      document.getElementById("revCount")?.textContent = "0";
+      const rc1 = document.getElementById("revCount");
+      if (rc1) rc1.textContent = "0";
       return;
     }
 
@@ -65,12 +66,14 @@ async function loadRevenue() {
       })
       .join("");
 
-    document.getElementById("revCount")?.textContent = String(list.length);
+    const rc2 = document.getElementById("revCount");
+    if (rc2) rc2.textContent = String(list.length);
   } catch (err) {
     console.error("❌ خطأ تحميل الإيرادات:", err);
     tb.innerHTML = `<tr><td colspan="8" class="text-danger text-center">فشل تحميل البيانات</td></tr>`;
   }
 }
+
 
 function fmt(v) {
   const n = Number(v || 0);
