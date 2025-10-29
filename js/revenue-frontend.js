@@ -82,7 +82,7 @@ function renderTable(data) {
 async function onSubmitRevenue(e) {
   e.preventDefault();
 
-  // نفس IDs الحالية في HTML (لا نستخدم name هنا)
+  // نفس IDs الحالية في HTML
   const payload = {
     amount: Number(document.getElementById("amount")?.value || 0),
     payment_method: (document.getElementById("payment_type")?.value || "").trim(),
