@@ -1,224 +1,246 @@
-// js/expenses-frontend.js
+/* ===============================
+   المصاريف — Frontend Controller
+   يعتمد على api.js (expensesAPI)
+   =============================== */
 
-// عناصر الصفحة
-const tbody = document.querySelector("#expensesRows");
-const countBox = document.querySelector("#expensesCount");
+// عناصر أساسية
+const rowsTbody         = document.getElementById('rows');
+const revCountEl        = document.getElementById('expCount');        // إجمالي عدد المصاريف
+const addBtn            = document.getElementById('openAddModalBtn'); // زر فتح مودال الإضافة
+const addModalEl        = document.getElementById('addExpenseModal');
+const typesBtn          = document.getElementById('openTypesModalBtn');
+const typesModalEl      = document.getElementById('typesModal');
 
-// أزرار
-const addBtn = document.getElementById("addExpenseBtn");          // زر فتح مودال إضافة مصروف
-const printBtn = document.getElementById("printBtn");              // زر طباعة الجدول
-const manageTypesBtn = document.getElementById("manageTypesBtn");  // زر إدارة الأنواع
+// عناصر نموذج إضافة مصروف
+const form              = document.getElementById('expenseForm');
+const amountInput       = document.getElementById('amount');
+const dateInput         = document.getElementById('date');
+const typeSelect        = document.getElementById('type_id');
+const payMethodSelect   = document.getElementById('pay_method');
+const beneficiaryInput  = document.getElementById('beneficiary');
+const descriptionInput  = document.getElementById('description');
+const notesInput        = document.getElementById('notes');
 
-// المودالات + عناصرها
-const addModal = document.getElementById("addExpenseModal");
-const addForm  = document.getElementById("addExpenseForm");
+// عناصر إدارة الأنواع
+const newTypeNameInput  = document.getElementById('newTypeName');
+const addTypeBtn        = document.getElementById('addTypeBtn');
+const typesList         = document.getElementById('typesList');
 
-// حقول المودال (IDs مطابقة لتصميمك الحالي)
-const fldAmount      = document.getElementById("amount");
-const fldType        = document.getElementById("type_id");     // <select> للأنواع
-const fldDate        = document.getElementById("date");        // input[type=date]
-const fldPayMethod   = document.getElementById("pay_method");  // <select> كاش/فيزا/ذمم
-const fldBeneficiary = document.getElementById("beneficiary");
-const fldDesc        = document.getElementById("description");
-const fldNotes       = document.getElementById("notes");
+// Bootstrap Modals
+const addModal   = new bootstrap.Modal(addModalEl);
+const typesModal = new bootstrap.Modal(typesModalEl);
 
-// مودال إدارة الأنواع
-const typesModal = document.getElementById("typesModal");
-const typesList  = document.getElementById("typesList");
-const typeNameInput = document.getElementById("newTypeName");
-const addTypeBtn    = document.getElementById("addTypeBtn");
-
-// ============= Util =============
-function alertx(msg) { window.alert(msg); }
-
-function fmtDateOnly(d) {
-  if (!d) return "";
-  return String(d).slice(0,10);
+// تنسيق تاريخ اليوم yyyy-mm-dd
+function todayISO() {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
 }
 
-function printTable() {
-  const table = document.getElementById("expensesTable");
-  const w = window.open("", "_blank");
+// طباعة جدول محدد
+function printTable(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const w = window.open('', '_blank');
   w.document.write(`
-    <html lang="ar" dir="rtl">
+    <html dir="rtl" lang="ar">
       <head>
-        <meta charset="utf-8">
-        <title>طباعة المصاريف</title>
+        <meta charset="UTF-8" />
+        <title>طباعة الجدول</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
         <style>
-          body { font-family: Cairo, Tahoma, Arial; padding: 16px; }
-          table { width:100%; border-collapse: collapse; }
-          th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-          thead { background:#e7f0ff; }
+          body { padding: 16px; font-family: "Cairo", sans-serif; }
+          table { direction: rtl; }
         </style>
       </head>
-      <body>${table.outerHTML}</body>
+      <body>
+        ${table.outerHTML}
+        <script>window.onload = () => { window.print(); window.close(); };</script>
+      </body>
     </html>
   `);
   w.document.close();
-  w.focus();
-  w.print();
-  w.close();
 }
 
-// ============= تحميل الأنواع =============
-async function loadTypesIntoSelect() {
+// تحميل الأنواع للقائمتين (السيلكت + قائمة الإدارة)
+async function loadTypes() {
   try {
     const types = await expensesAPI.getTypes();
-    fldType.innerHTML = `<option value="">اختر النوع...</option>` +
-      types.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
-  } catch (e) {
-    console.error(e);
-    // خلّي القائمة فاضية لكن ما نكسر إضافة مصروف
-    fldType.innerHTML = `<option value="">لا يوجد أنواع</option>`;
+
+    // املأ select النوع
+    typeSelect.innerHTML = `<option value="">— اختر النوع —</option>`;
+    for (const t of types) {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      typeSelect.appendChild(opt);
+    }
+
+    // املأ قائمة الإدارة
+    typesList.innerHTML = '';
+    if (!types.length) {
+      typesList.innerHTML = `<li class="list-group-item text-muted">لا توجد أنواع بعد</li>`;
+    } else {
+      for (const t of types) {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.innerHTML = `
+          <span>${t.name}</span>
+          <button class="btn btn-sm btn-danger" data-id="${t.id}">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        `;
+        li.querySelector('button').addEventListener('click', async () => {
+          if (!confirm(`حذف نوع "${t.name}"؟`)) return;
+          try {
+            await expensesAPI.deleteType(t.id);
+            await loadTypes();
+          } catch (err) {
+            alert('فشل حذف النوع: ' + err.message);
+          }
+        });
+        typesList.appendChild(li);
+      }
+    }
+  } catch (err) {
+    // في حال الخطأ، يظهر رسالة بسيطة ولا ينهار
+    typeSelect.innerHTML = `<option value="">— فشل تحميل الأنواع —</option>`;
+    typesList.innerHTML = `<li class="list-group-item text-danger">فشل تحميل الأنواع</li>`;
   }
 }
 
-async function refreshTypesModalList() {
-  try {
-    const types = await expensesAPI.getTypes();
-    typesList.innerHTML = types.map(t => `
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <span>${t.name}</span>
-        <button class="btn btn-sm btn-danger" data-del="${t.id}">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </li>
-    `).join("");
-  } catch (e) {
-    typesList.innerHTML = `<li class="list-group-item text-muted">...جارِ التحميل</li>`;
-  }
-}
-
-// ============= تحميل المصاريف =============
+// تحميل بيانات المصاريف
 async function loadExpenses() {
   try {
     const data = await expensesAPI.getAll();
+    rowsTbody.innerHTML = '';
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-muted">لا توجد بيانات</td></tr>`;
-      countBox.textContent = "0";
-      return;
+      rowsTbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center text-muted">لا توجد بيانات</td>
+        </tr>`;
+    } else {
+      for (const row of data) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.date?.slice(0,10) || '-'}</td>
+          <td>${row.type_name || '-'}</td>
+          <td>${Number(row.amount || 0).toFixed(2)}</td>
+          <td>${row.pay_method || '-'}</td>
+          <td>${row.beneficiary || '-'}</td>
+          <td>${row.description || '-'}</td>
+          <td>
+            <button class="btn btn-sm btn-danger" data-id="${row.id}">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tr.querySelector('button').addEventListener('click', async () => {
+          if (!confirm('حذف هذا المصروف؟')) return;
+          try {
+            await expensesAPI.delete(row.id);
+            await loadExpenses();
+            updateCount();
+          } catch (err) {
+            alert('فشل الحذف: ' + err.message);
+          }
+        });
+        rowsTbody.appendChild(tr);
+      }
     }
-    tbody.innerHTML = data.map(row => `
+    updateCount();
+  } catch (err) {
+    rowsTbody.innerHTML = `
       <tr>
-        <td>${fmtDateOnly(row.date)}</td>
-        <td>${row.type_name || "-"}</td>
-        <td>${Number(row.amount).toFixed(2)}</td>
-        <td>${row.pay_method || "-"}</td>
-        <td>${row.beneficiary || "-"}</td>
-        <td>${row.description || "-"}</td>
-        <td>${row.notes || "-"}</td>
-        <td>
-          <button class="btn btn-sm btn-danger" onclick="delExpense(${row.id})">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </td>
-      </tr>
-    `).join("");
-    countBox.textContent = String(data.length);
-  } catch (e) {
-    console.error(e);
-    tbody.innerHTML = `<tr><td colspan="8" class="text-danger">فشل تحميل البيانات ⚠️</td></tr>`;
-    countBox.textContent = "0";
+        <td colspan="7" class="text-center text-danger">فشل تحميل البيانات</td>
+      </tr>`;
   }
 }
-window.delExpense = async function(id) {
-  if (!confirm("هل تريد حذف هذا المصروف؟")) return;
-  await expensesAPI.delete(id);
-  loadExpenses();
-};
 
-// ============= أحداث المودالات =============
-addBtn?.addEventListener("click", async () => {
-  // ضبط التاريخ تلقائيًا (yyyy-mm-dd)
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth()+1).padStart(2,'0');
-  const dd = String(today.getDate()).padStart(2,'0');
-  fldDate.value = `${yyyy}-${mm}-${dd}`;
+function updateCount() {
+  if (!revCountEl) return;
+  const count = rowsTbody.querySelectorAll('tr').length;
+  // لو فيه صف "لا توجد بيانات" اعتبر العدد 0
+  const realCount = rowsTbody.querySelector('td.text-muted') ? 0 : count;
+  revCountEl.textContent = realCount;
+}
 
-  fldAmount.value = "";
-  fldType.value = "";
-  fldPayMethod.value = "كاش";
-  fldBeneficiary.value = "";
-  fldDesc.value = "";
-  fldNotes.value = "";
-
-  await loadTypesIntoSelect();
-  // Bootstrap Modal إن لزم
+// فتح مودال إضافة مصروف
+addBtn?.addEventListener('click', async () => {
+  // قيم افتراضية
+  form.reset();
+  dateInput.value = todayISO();
+  payMethodSelect.value = 'كاش';
+  await loadTypes();
+  addModal.show();
 });
 
-manageTypesBtn?.addEventListener("click", async () => {
-  typeNameInput.value = "";
-  await refreshTypesModalList();
+// فتح مودال إدارة الأنواع
+typesBtn?.addEventListener('click', async () => {
+  newTypeNameInput.value = '';
+  await loadTypes();
+  typesModal.show();
 });
 
 // إضافة نوع جديد
-addTypeBtn?.addEventListener("click", async () => {
-  const name = typeNameInput.value.trim();
-  if (!name) return;
+addTypeBtn?.addEventListener('click', async () => {
+  const name = (newTypeNameInput.value || '').trim();
+  if (!name) {
+    alert('اكتب اسم النوع أولاً');
+    return;
+  }
   try {
     await expensesAPI.addType(name);
-    typeNameInput.value = "";
-    await refreshTypesModalList();
-    await loadTypesIntoSelect(); // حتى يظهر مباشرة في المودال الآخر
-  } catch (e) {
-    console.error(e);
-    alertx(`فشل إضافة النوع: ${e.message}`);
-  }
-});
-
-// حذف نوع من داخل المودال
-typesList?.addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-del]");
-  if (!btn) return;
-  const id = btn.getAttribute("data-del");
-  if (!confirm("حذف هذا النوع؟")) return;
-  try {
-    await expensesAPI.deleteType(id);
-    await refreshTypesModalList();
-    await loadTypesIntoSelect();
-  } catch (e2) {
-    console.error(e2);
-    alertx("فشل حذف النوع");
-  }
-});
-
-// إرسال نموذج إضافة مصروف
-addForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  try {
-    const payload = {
-      date:        fldDate?.value || null,
-      type_id:     fldType?.value ? Number(fldType.value) : null,
-      amount:      fldAmount?.value ? Number(fldAmount.value) : null,
-      beneficiary: (fldBeneficiary?.value || "").trim(),
-      pay_method:  fldPayMethod?.value || null,
-      description: (fldDesc?.value || "").trim(),
-      notes:       (fldNotes?.value || "").trim()
-    };
-
-    if (!payload.amount) {
-      alertx("المبلغ مطلوب");
-      return;
-    }
-
-    await expensesAPI.create(payload);
-
-    // اغلق المودال (Bootstrap)
-    const modal = bootstrap.Modal.getInstance(addModal) || new bootstrap.Modal(addModal);
-    modal.hide();
-
-    await loadExpenses();
+    newTypeNameInput.value = '';
+    await loadTypes();
   } catch (err) {
-    console.error(err);
-    alertx(`فشل في إضافة المصروف: ${err.message}`);
+    alert('فشل إضافة النوع: ' + err.message);
   }
 });
 
-printBtn?.addEventListener("click", printTable);
+// حفظ مصروف جديد
+form?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    amount: Number((amountInput.value || '').trim()),
+    date: (dateInput.value || todayISO()).trim(),
+    type_id: typeSelect.value ? Number(typeSelect.value) : null,
+    pay_method: (payMethodSelect.value || '').trim(),
+    beneficiary: (beneficiaryInput.value || '').trim(),
+    description: (descriptionInput.value || '').trim(),
+    notes: (notesInput.value || '').trim()
+  };
 
-// أول تحميل
-(async function init() {
-  await loadTypesIntoSelect();
-  await loadExpenses();
+  // تحققات بسيطة
+  if (!payload.amount || isNaN(payload.amount)) {
+    alert('رجاءً أدخل مبلغ صحيح');
+    return;
+  }
+  if (!payload.type_id) {
+    alert('اختر نوع المصروف');
+    return;
+  }
+
+  try {
+    await expensesAPI.create(payload);
+    addModal.hide();
+    await loadExpenses();
+    updateCount();
+  } catch (err) {
+    alert('فشل في إضافة المصروف: ' + err.message);
+  }
+});
+
+// طباعة الجدول الرئيسي
+document.getElementById('printMainBtn')?.addEventListener('click', () => {
+  printTable('dataTable');
+});
+
+// تشغيل أولي
+(function init() {
+  // اجعل تاريخ الحقل اليوم
+  if (dateInput) dateInput.value = todayISO();
+  // حمّل البيانات
+  loadExpenses();
 })();
