@@ -94,18 +94,21 @@ const vehiclesAPI = {
   create:    (data) => api.post('/vehicles', data),
   update:    (id, data) => api.put(`/vehicles/${id}`, data),
   delete:    (id) => api.delete(`/vehicles/${id}`),
-
-  // سجلات المركبات (اليومية)
   getLogs:   () => api.get('/vehicles/logs'),
   createLog: (data) => api.post('/vehicles/logs', data),
 };
 
 /* ─────────────────────────────
-   💸 المصاريف
+   💸 المصاريف + أنواع المصاريف
    ───────────────────────────── */
 const expensesAPI = {
   getAll:  () => api.get('/expenses'),
   create:  (data) => api.post('/expenses', data),
   update:  (id, data) => api.put(`/expenses/${id}`, data),
-  delete:  (id) => api.delete(`/expenses/${id}`)
+  delete:  (id) => api.delete(`/expenses/${id}`),
+
+  // أنواع المصاريف
+  getTypes: () => api.get('/expenses/types'),
+  addType:  (name) => api.post('/expenses/types', { name }),
+  deleteType: (id) => api.delete(`/expenses/types/${id}`)
 };

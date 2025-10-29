@@ -2,332 +2,152 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>المصاريف 💸 | شركة عدنان سماره لنقل المياه</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>المصاريف | شركة عدنان سماره لنقل المياه</title>
 
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"/>
 
   <style>
-    body {
-      font-family: "Cairo", sans-serif;
-      background-color: #f9fafc;
-      transition: margin-right 0.3s ease;
-    }
-
-    /* Sidebar */
-    #sidebar-wrapper {
-      width: 250px;
-      position: fixed;
-      right: 0;
-      top: 0;
-      height: 100%;
-      background: linear-gradient(180deg, #2563eb, #1d4ed8);
-      color: white;
-      transition: all 0.3s ease;
-      overflow-y: auto;
-    }
-
-    #sidebar-wrapper.collapsed {
-      width: 0;
-      overflow: hidden;
-    }
-
-    #page-content-wrapper {
-      margin-right: 250px;
-      transition: margin-right 0.3s ease;
-    }
-
-    #sidebar-wrapper.collapsed + #page-content-wrapper {
-      margin-right: 0;
-    }
-
-    .list-group-item {
-      background: transparent;
-      color: #e0e7ff;
-      border: none;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-
-    .list-group-item.active, .list-group-item:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-      color: #fff;
-    }
-
-    /* Table */
-    thead.table-primary {
-      background: linear-gradient(90deg, #2563eb, #1d4ed8);
-      color: #fff;
-    }
-    tbody tr:hover {
-      background-color: #f1f5ff;
-      transform: scale(1.01);
-      transition: all 0.2s ease-in-out;
-    }
-
-    /* Summary */
-    .summary-box {
-      background: linear-gradient(90deg, #22c55e, #16a34a);
-      color: #fff;
-      border-radius: 10px;
-      padding: 15px 20px;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .btn-print {
-      background-color: #9ca3af;
-      color: white;
-      border: none;
-    }
-    .btn-print:hover {
-      background-color: #6b7280;
-    }
-
-    /* Notifications */
-    #notif-btn:hover i {
-      color: #1d4ed8;
-    }
-    #notif-dot {
-      display: none;
-    }
-    #notif-box {
-      border: none;
-      border-radius: 10px;
-      background-color: #ffffff;
-    }
-    #notif-box .list-group-item {
-      font-size: 14px;
-      border: none;
-      border-bottom: 1px solid #f1f5f9;
+    body{font-family:"Cairo",sans-serif;background:#f9fafc}
+    thead.table-primary{background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff}
+    tbody tr:hover{background:#f1f5ff;transition:.2s}
+    .btn-print{background:#9ca3af;color:#fff}
+    .btn-print:hover{background:#6b7280}
+    /* طباعة الجدول فقط */
+    @media print{
+      body *{visibility:hidden}
+      #expensesCard, #expensesCard *{visibility:visible}
+      #expensesCard{position:absolute;inset:0;box-shadow:none}
     }
   </style>
 </head>
-
 <body>
-  <!-- Sidebar -->
-  <div id="sidebar-wrapper">
-    <div class="sidebar-header text-center py-4">
-      <img src="images/logo.png" alt="Logo" class="logo mb-2" width="80" />
-      <h5 class="fw-bold text-white">شركة عدنان سماره</h5>
-      <p class="small text-light mb-0">لنقل المياه</p>
+  <div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="fw-bold text-primary mb-0">قائمة المصاريف</h3>
+      <div class="d-flex gap-2">
+        <button class="btn btn-secondary btn-print" onclick="window.print()">
+          <i class="fa-solid fa-print me-1"></i> طباعة الجدول
+        </button>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#typesModal">
+          <i class="fa-solid fa-layer-group me-1"></i> إدارة الأنواع
+        </button>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+          <i class="fa-solid fa-plus me-1"></i> إضافة مصروف
+        </button>
+      </div>
     </div>
 
-    <div class="list-group list-group-flush mt-3">
-      <a href="index.html" class="list-group-item"><i class="fa-solid fa-house me-2"></i> الشاشة الرئيسة</a>
-      <a href="revenue.html" class="list-group-item"><i class="fa-solid fa-sack-dollar me-2"></i> الإيرادات</a>
-      <a href="expenses.html" class="list-group-item active"><i class="fa-solid fa-money-bill-wave me-2"></i> المصاريف</a>
-      <a href="employees.html" class="list-group-item"><i class="fa-solid fa-users me-2"></i> الموظفين</a>
-      <a href="vehicles.html" class="list-group-item"><i class="fa-solid fa-truck-droplet me-2"></i> المركبات</a>
-      <a href="suppliers.html" class="list-group-item"><i class="fa-solid fa-truck-field me-2"></i> الموردون</a>
-      <a href="customers.html" class="list-group-item"><i class="fa-solid fa-user-tie me-2"></i> العملاء</a>
-      <a href="settings.html" class="list-group-item"><i class="fa-solid fa-gear me-2"></i> الإعدادات</a>
+    <!-- جدول المصاريف -->
+    <div class="card shadow-sm border-0" id="expensesCard">
+      <div class="card-body">
+        <table class="table table-striped table-hover text-center align-middle" id="expensesTable">
+          <thead class="table-primary">
+            <tr>
+              <th>التاريخ</th>
+              <th>النوع</th>
+              <th>المبلغ</th>
+              <th>الوصف</th>
+              <th>الجهة المستفيدة</th>
+              <th>طريقة الدفع</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7" class="text-muted">جارٍ تحميل البيانات…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- إحصائيات بسيطة -->
+    <div class="alert alert-success mt-3">
+      إجمالي المصاريف: <strong id="totalExpenses">0</strong>
     </div>
   </div>
 
-  <!-- المحتوى -->
-  <div id="page-content-wrapper">
-    <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-white">
-      <div class="container-fluid d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center">
-          <button class="btn btn-outline-primary me-2" id="menu-toggle"><i class="fa-solid fa-bars"></i></button>
-          <span class="navbar-brand fw-bold text-primary mb-0">قسم المصاريف 💸</span>
-        </div>
-
-        <!-- إشعارات -->
-        <div class="position-relative ms-auto me-3">
-          <button id="notif-btn" class="btn btn-light position-relative">
-            <i class="fa-solid fa-bell text-primary fs-5"></i>
-            <span id="notif-dot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-          </button>
-
-          <div id="notif-box" class="card shadow-sm position-absolute end-0 mt-2" style="width: 300px; display: none; z-index: 1050;">
-            <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
-              <span><i class="fa-solid fa-bell me-1"></i> الإشعارات</span>
-              <button id="clearNotif" class="btn btn-sm btn-light text-primary">مسح الكل</button>
-            </div>
-            <ul id="notif-list" class="list-group list-group-flush" style="max-height: 260px; overflow-y: auto;">
-              <li class="list-group-item text-center text-muted small">لا توجد إشعارات حالياً</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <div class="container-fluid py-5 px-4">
-      <h2 class="fw-bold mb-4 text-primary">قائمة المصاريف</h2>
-      <p class="lead text-secondary mb-4">💰 تتبع المصاريف الشهرية بشكل منظم وسهل.</p>
-
-      <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal">
-          <i class="fa-solid fa-plus"></i> إضافة مصروف
-        </button>
-        <button class="btn btn-print shadow-sm" onclick="window.print()">
-          <i class="fa-solid fa-print"></i> طباعة
-        </button>
-      </div>
-
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <table class="table table-striped table-hover text-center align-middle">
-            <thead class="table-primary">
-              <tr>
-                <th>التاريخ</th>
-                <th>النوع</th>
-                <th>الفئة</th>
-                <th>المبلغ</th>
-                <th>الجهة المستفيدة</th>
-                <th>طريقة الدفع</th>
-                <th>الوصف</th>
-                <th>الحالة</th>
-                <th>⚙️</th>
-              </tr>
-            </thead>
-            <tbody id="rows">
-              <tr><td colspan="9" class="text-center text-muted">جارٍ تحميل البيانات...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="summary-box">
-        <div class="summary-text">إجمالي عدد المصاريف: <span id="expenseCount">0</span></div>
-        <i class="fa-solid fa-wallet"></i>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal إضافة -->
-  <div class="modal fade" id="addModal" tabindex="-1">
+  <!-- Modal: إضافة/تعديل مصروف -->
+  <div class="modal fade" id="addExpenseModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
+      <form id="expenseForm" class="modal-content">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title"><i class="fa-solid fa-circle-plus me-2"></i> إضافة مصروف جديد</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+        <div class="modal-body row g-3">
+          <input type="hidden" name="id"/>
+
+          <div class="col-md-4">
+            <label class="form-label">التاريخ</label>
+            <input type="date" name="date" class="form-control" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">النوع</label>
+            <select name="type" id="typeSelect" class="form-select"></select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">المبلغ</label>
+            <input type="number" name="amount" class="form-control" required step="0.01"/>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">الجهة المستفيدة</label>
+            <input type="text" name="beneficiary" class="form-control" placeholder="مثال: محطة وقود، ورشة صيانة…"/>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">طريقة الدفع</label>
+            <select name="payment_method" class="form-select">
+              <option value="كاش">كاش</option>
+              <option value="فيزا">فيزا</option>
+              <option value="ذمم">ذمم</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">الوصف</label>
+            <input type="text" name="description" class="form-control" placeholder="وصف مختصر للمصروف"/>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">ملاحظات</label>
+            <textarea name="notes" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-success"><i class="fa-solid fa-check me-1"></i> حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: إدارة الأنواع -->
+  <div class="modal fade" id="typesModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-secondary text-white">
+          <h5 class="modal-title"><i class="fa-solid fa-layer-group me-2"></i> إدارة أنواع المصاريف</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
         <div class="modal-body">
-          <form id="addForm" class="row g-3">
-            <div class="col-md-4"><label class="form-label">التاريخ</label><input type="date" name="date" class="form-control" required></div>
-            <div class="col-md-4"><label class="form-label">النوع</label><input name="type" class="form-control" required></div>
-            <div class="col-md-4"><label class="form-label">الفئة</label><input name="category" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">المبلغ</label><input type="number" name="amount" class="form-control" required></div>
-            <div class="col-md-4"><label class="form-label">الجهة المستفيدة</label><input name="recipient" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">طريقة الدفع</label><input name="payment_method" class="form-control"></div>
-            <div class="col-md-12"><label class="form-label">الوصف</label><input name="description" class="form-control"></div>
-            <div class="col-md-12"><label class="form-label">ملاحظات</label><input name="notes" class="form-control"></div>
-            <div class="col-12 text-end mt-3"><button class="btn btn-success"><i class="fa-solid fa-check"></i> حفظ</button></div>
-          </form>
+          <div class="input-group mb-3">
+            <input id="newTypeName" class="form-control" placeholder="اكتب اسم النوع…">
+            <button class="btn btn-primary" id="addTypeBtn"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <ul class="list-group" id="typesList">
+            <li class="list-group-item text-muted text-center">جارٍ التحميل…</li>
+          </ul>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="js/script.js"></script>
-  <script>
-    const sidebar = document.getElementById("sidebar-wrapper");
-    const pageContent = document.getElementById("page-content-wrapper");
-    document.getElementById("menu-toggle").addEventListener("click", () => {
-      sidebar.classList.toggle("collapsed");
-      pageContent.classList.toggle("expanded");
-    });
-
-    async function loadExpenses(retry = true) {
-      const tbody = document.getElementById('rows');
-      try {
-        const data = await Api.get('/api/expenses');
-        if (!data || !data.length) {
-          tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted">لا توجد بيانات</td></tr>`;
-          document.getElementById("expenseCount").textContent = "0";
-          if (retry) setTimeout(() => loadExpenses(false), 1500);
-          return;
-        }
-        tbody.innerHTML = data.map(e => `
-          <tr>
-            <td>${e.date || ''}</td>
-            <td>${e.type || ''}</td>
-            <td>${e.category || ''}</td>
-            <td>${(+e.amount || 0).toLocaleString('ar-JO')}</td>
-            <td>${e.recipient || ''}</td>
-            <td>${e.payment_method || ''}</td>
-            <td>${e.description || ''}</td>
-            <td>${e.status || ''}</td>
-            <td><button class="btn btn-sm btn-danger" onclick="delExpense(${e.id})"><i class="fa-solid fa-trash"></i></button></td>
-          </tr>
-        `).join('');
-        document.getElementById("expenseCount").textContent = data.length;
-      } catch {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">⚠️ فشل تحميل البيانات</td></tr>`;
-      }
-    }
-
-    async function delExpense(id) {
-      if (!confirm("هل أنت متأكد من حذف هذا المصروف؟")) return;
-      await Api.del('/api/expenses/' + id);
-      loadExpenses();
-    }
-
-    document.getElementById('addForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(e.target).entries());
-      await Api.post('/api/expenses', data);
-      e.target.reset();
-      document.querySelector('#addModal .btn-close').click();
-      loadExpenses();
-    });
-
-    loadExpenses();
-
-    // إشعارات
-    const notifBtn = document.getElementById("notif-btn");
-    const notifBox = document.getElementById("notif-box");
-    const notifDot = document.getElementById("notif-dot");
-    const notifList = document.getElementById("notif-list");
-    const clearNotif = document.getElementById("clearNotif");
-
-    notifBtn.addEventListener("click", () => {
-      notifBox.style.display = notifBox.style.display === "block" ? "none" : "block";
-      notifDot.style.display = "none";
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!notifBox.contains(e.target) && !notifBtn.contains(e.target)) notifBox.style.display = "none";
-    });
-
-    clearNotif.addEventListener("click", () => {
-      notifList.innerHTML = `<li class="list-group-item text-center text-muted small">لا توجد إشعارات حالياً</li>`;
-      notifDot.style.display = "none";
-    });
-
-    function addNotification(text, icon="fa-bell", color="text-primary") {
-      if (notifList.querySelector(".text-muted")) notifList.innerHTML = "";
-      notifDot.style.display = "block";
-      const li = document.createElement("li");
-      li.className = "list-group-item d-flex align-items-center";
-      li.innerHTML = `<i class="fa-solid ${icon} ${color} me-2"></i><span>${text}</span>`;
-      notifList.prepend(li);
-    }
-
-    setTimeout(() => {
-      addNotification("تم تسجيل مصروف جديد بقيمة 120 د.أ", "fa-money-bill", "text-success");
-      addNotification("تنبيه: فاتورة الكهرباء لم تُسدد بعد", "fa-triangle-exclamation", "text-warning");
-    }, 1500);
-  </script>
-<script>
-  if (localStorage.getItem("loggedIn") !== "true") {
-    window.location.href = "login.html";
-  }
-</script>
-
+  <script src="js/api.js"></script>
+  <script src="js/expenses-frontend.js"></script>
 </body>
 </html>
