@@ -32,17 +32,15 @@
 
     /* زر الثلاث شحطات العائم */
     .btn-sidebar-toggle{
-      position: fixed; top: 18px; right: 72px; z-index: 1055;
+      position: fixed; top: 14px; right: 266px; z-index: 1055;
       width: 42px; height: 42px; border-radius: 10px;
       display:flex; align-items:center; justify-content:center;
       background:#1e73ff; color:#fff; border:none; box-shadow:0 6px 18px #1e73ff44;
-      cursor:pointer; transition:transform .15s ease;
+      cursor:pointer; transition:transform .15s ease, right .2s ease; /* ← إضافة right */
     }
     .btn-sidebar-toggle:active{ transform: scale(.96); }
-
-    /* منع تداخل الزر مع عنوان القسم */
-    #page-content-wrapper .navbar{ position: relative; }
-    #page-content-wrapper .navbar .navbar-brand{ padding-right:56px; }
+    /* عند طي السايدبار يرجع الزر لحافة الشاشة */
+    body.sidebar-collapsed .btn-sidebar-toggle{ right:16px; }
   </style>
 </head>
 <body>
@@ -179,7 +177,7 @@
   <script src="js/api.js"></script>
   <script src="js/expenses-frontend.js"></script>
 
-  <!-- زر الثلاث شحطات + منطق الطي -->
+  <!-- زر الثلاث شحطات + منطق الطي (سطر/منطقنا الأخير) -->
   <button id="toggleSidebar" class="btn-sidebar-toggle" aria-label="قائمة">
     <i class="fa fa-bars"></i>
   </button>
@@ -198,4 +196,5 @@
   </script>
 
 </body>
+
 </html>
