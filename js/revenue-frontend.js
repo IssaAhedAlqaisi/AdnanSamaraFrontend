@@ -31,7 +31,7 @@ async function loadRevenue() {
     renderTable(REVENUE_DATA);
   } catch (err) {
     console.error("❌ خطأ تحميل الإيرادات:", err);
-    tb.innerHTML = `<tr><td colspan="8" class="text-danger text-center">فشل تحميل البيانات</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="9" class="text-danger text-center">فشل تحميل البيانات</td></tr>`;
     const rc = document.getElementById("revCount");
     if (rc) rc.textContent = "0";
   }
@@ -43,7 +43,7 @@ function renderTable(list) {
   if (!tb) return;
 
   if (!list.length) {
-    tb.innerHTML = `<tr><td colspan="8" class="text-center text-muted">لا توجد بيانات</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="9" class="text-center text-muted">لا توجد بيانات</td></tr>`;
     if (rc) rc.textContent = "0";
     return;
   }
@@ -56,6 +56,8 @@ function renderTable(list) {
           : r.payment_method != null
           ? r.payment_method
           : "-";
+      const id = r.id ?? r.rev_id ?? null;
+
       return `
       <tr>
         <td>${onlyDate(r.date) || "-"}</td>
@@ -66,6 +68,15 @@ function renderTable(list) {
         <td>${r.source_type || "-"}</td>
         <td>${r.driver_name || "-"}</td>
         <td>${r.vehicle_number || "-"}</td>
+        <td>
+          ${
+            id
+              ? `<button class="btn btn-sm btn-danger" onclick="deleteRevenue(${id})" title="حذف">
+                   <i class="fa-solid fa-trash"></i>
+                 </button>`
+              : `<span class="text-muted">—</span>`
+          }
+        </td>
       </tr>`;
     })
     .join("");
@@ -92,12 +103,13 @@ async function onCreateRevenue(e) {
 
   try {
     const res = await api.post("/revenue", payload);
-    // نضيفه للذاكرة ونُعيد العرض
-    const created = res && (res.revenue || res.data || res);
+    // بعض الباكندات ترجع { revenue: {...} } وأخرى ترجع {...} مباشرة
+    const created = (res && (res.revenue || res.data)) || res;
     if (created) {
       REVENUE_DATA.unshift(created);
       renderTable(REVENUE_DATA);
     }
+
     // اغلاق المودال وتنظيف
     f.reset();
     const closeBtn = document.querySelector("#addModal .btn-close");
@@ -105,6 +117,22 @@ async function onCreateRevenue(e) {
   } catch (err) {
     console.error("❌ خطأ إضافة الإيراد:", err);
     alert("حدث خطأ أثناء الإضافة");
+  }
+}
+
+/* =============== حذف =============== */
+async function deleteRevenue(id) {
+  if (!id) return alert("لا يمكن حذف هذا السجل (معرّف مفقود).");
+  if (!confirm("هل تريد حذف هذا الإيراد؟")) return;
+
+  try {
+    await api.delete(`/revenue/${id}`);
+    // نحذف من الذاكرة ونُعيد العرض
+    REVENUE_DATA = REVENUE_DATA.filter((r) => (r.id ?? r.rev_id) !== id);
+    renderTable(REVENUE_DATA);
+  } catch (err) {
+    console.error("❌ خطأ الحذف:", err);
+    alert("فشل حذف السجل");
   }
 }
 
