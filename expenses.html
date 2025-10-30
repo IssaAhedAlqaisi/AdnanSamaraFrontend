@@ -32,13 +32,15 @@
 
     /* زر الثلاث شحطات العائم */
     .btn-sidebar-toggle{
-      position: fixed; top: 14px; right: 72px; z-index: 1055;
+      position: fixed; top: 14px; right: 266px; z-index: 1055;
       width: 42px; height: 42px; border-radius: 10px;
       display:flex; align-items:center; justify-content:center;
       background:#1e73ff; color:#fff; border:none; box-shadow:0 6px 18px #1e73ff44;
-      cursor:pointer; transition:transform .15s ease;
+      cursor:pointer; transition:transform .15s ease, right .2s ease; /* ← إضافة right */
     }
     .btn-sidebar-toggle:active{ transform: scale(.96); }
+    /* عند طي السايدبار يرجع الزر لحافة الشاشة */
+    body.sidebar-collapsed .btn-sidebar-toggle{ right:16px; }
   </style>
 </head>
 <body>
