@@ -151,9 +151,13 @@
             </div>
             <div class="col-md-4"><label class="form-label">نوع النقلة</label><input id="tank_type" class="form-control"></div>
             <div class="col-md-4"><label class="form-label">كمية المياه (م³)</label><input type="number" id="water_amount" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">مصدر الماء</label>
-              <select id="source_type" class="form-select"><option value="نقد">نقد</option><option value="ذمم">ذمم</option></select>
+
+            <!-- مصدر الماء: حقل نصي -->
+            <div class="col-md-4">
+              <label class="form-label">مصدر الماء</label>
+              <input type="text" id="source_type" class="form-control" placeholder="مثال: بئر / محطة / صهريج">
             </div>
+
             <div class="col-md-4"><label class="form-label">اسم السائق</label><input id="driver_name" class="form-control"></div>
             <div class="col-md-4"><label class="form-label">رقم المركبة</label><input id="vehicle_number" class="form-control"></div>
             <div class="col-md-12"><label class="form-label">ملاحظات</label><input id="notes" class="form-control"></div>
@@ -166,18 +170,13 @@
 
   <script src="js/api.js"></script>
   <script src="js/revenue-frontend.js"></script>
-    <script>
-  // 🖨️ طباعة الجدول فقط (بدون باقي الصفحة)
-  function printTable(tableId) {
-    const table = document.getElementById(tableId);
-    if (!table) {
-      alert('الجدول غير موجود');
-      return;
-    }
-
-    const w = window.open('', '_blank', 'width=900,height=700');
-
-    w.document.write(`<!doctype html>
+  <script>
+    // 🖨️ طباعة الجدول فقط (بدون باقي الصفحة)
+    function printTable(tableId) {
+      const table = document.getElementById(tableId);
+      if (!table) { alert('الجدول غير موجود'); return; }
+      const w = window.open('', '_blank', 'width=900,height=700');
+      w.document.write(`<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
@@ -187,9 +186,7 @@
     body { font-family: "Cairo", sans-serif; padding: 16px; }
     table { width: 100%; }
     th, td { text-align: center; }
-    @media print {
-      body { margin: 12px; }
-    }
+    @media print { body { margin: 12px; } }
   </style>
 </head>
 <body>
@@ -203,10 +200,9 @@
   <\/script>
 </body>
 </html>`);
-
-    w.document.close();
-  }
-</script>
+      w.document.close();
+    }
+  </script>
 
 </body>
 </html>
