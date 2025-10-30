@@ -10,11 +10,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
     body{font-family:"Cairo",sans-serif;background:#f7f9fc}
-    #sidebar-wrapper{width:250px;position:fixed;right:0;top:0;height:100%;background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;overflow-y:auto}
-    #page-content-wrapper{margin-right:250px}
+
+    /* ===== Sidebar & content ===== */
+    #sidebar-wrapper{
+      width:250px;position:fixed;right:0;top:0;height:100%;
+      background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;overflow-y:auto;
+      transition: transform .2s ease;
+      transform: translateX(0);
+    }
+    #page-content-wrapper{
+      margin-right:250px;
+      transition: margin-right .2s ease;
+    }
+    /* عند الطي */
+    body.sidebar-collapsed #sidebar-wrapper{ transform: translateX(250px); }
+    body.sidebar-collapsed #page-content-wrapper{ margin-right:0; }
+
     .list-group-item{background:transparent;color:#e0e7ff;border:none}
     .list-group-item.active,.list-group-item:hover{background-color:rgba(255,255,255,.2);color:#fff}
     thead.table-primary{background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff}
+
+    /* زر الثلاث شحطات العائم */
+    .btn-sidebar-toggle{
+      position: fixed; top: 14px; right: 72px; z-index: 1055;
+      width: 42px; height: 42px; border-radius: 10px;
+      display:flex; align-items:center; justify-content:center;
+      background:#1e73ff; color:#fff; border:none; box-shadow:0 6px 18px #1e73ff44;
+      cursor:pointer; transition:transform .15s ease;
+    }
+    .btn-sidebar-toggle:active{ transform: scale(.96); }
   </style>
 </head>
 <body>
@@ -151,7 +175,23 @@
   <script src="js/api.js"></script>
   <script src="js/expenses-frontend.js"></script>
 
-    <script src="js/sidebar-toggle.js"></script>
+  <!-- زر الثلاث شحطات + منطق الطي (سطر/منطقنا الأخير) -->
+  <button id="toggleSidebar" class="btn-sidebar-toggle" aria-label="قائمة">
+    <i class="fa fa-bars"></i>
+  </button>
+  <script>
+    (function(){
+      const body = document.body;
+      const key  = "sidebar-collapsed";
+      // استرجاع حالة السايدبار من التخزين
+      if (localStorage.getItem(key) === "1") body.classList.add("sidebar-collapsed");
+      // تبديل الحالة بالزر
+      document.getElementById("toggleSidebar").addEventListener("click", ()=>{
+        body.classList.toggle("sidebar-collapsed");
+        localStorage.setItem(key, body.classList.contains("sidebar-collapsed") ? "1" : "0");
+      });
+    })();
+  </script>
 
 </body>
 </html>
