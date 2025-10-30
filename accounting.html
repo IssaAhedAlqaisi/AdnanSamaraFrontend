@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قسم المحاسبة | شركة عدنان سماره</title>
+  <title>قسم المحاسبة | مؤسسة عدنان سماره</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
@@ -71,8 +71,9 @@
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold text-success mb-0"><i class="fa-solid fa-sack-dollar me-2"></i> جدول الإيرادات</h5>
                 <div class="no-print">
-                  <!-- يطبع جدول الإيرادات فقط -->
-                  <button class="btn btn-outline-secondary btn-sm"
+                  <!-- أعدنا الـ id + أبقينا الطباعة للجدول فقط -->
+                  <button id="printRevenueBtn"
+                          class="btn btn-outline-secondary btn-sm"
                           onclick="printTable('revenueTable','جدول الإيرادات')">
                     <i class="fa-solid fa-print"></i> طباعة الجدول
                   </button>
@@ -117,8 +118,9 @@
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold text-danger mb-0"><i class="fa-solid fa-money-bill-wave me-2"></i> جدول المصاريف</h5>
                 <div class="no-print">
-                  <!-- يطبع جدول المصاريف فقط -->
-                  <button class="btn btn-outline-secondary btn-sm"
+                  <!-- أعدنا الـ id + أبقينا الطباعة للجدول فقط -->
+                  <button id="printExpensesBtn"
+                          class="btn btn-outline-secondary btn-sm"
                           onclick="printTable('expensesTable','جدول المصاريف')">
                     <i class="fa-solid fa-print"></i> طباعة الجدول
                   </button>
@@ -184,33 +186,30 @@
   <script src="js/api.js"></script>
   <script src="js/accounting.js"></script>
 
-  <!-- 🖨️ طباعة جدول محدد فقط -->
+  <!-- طباعة جدول فقط -->
   <script>
-    function printTable(tableId, titleText){
+    function printTable(tableId, title){
       const table = document.getElementById(tableId);
-      if(!table){ alert('الجدول غير موجود'); return; }
-
+      if (!table) return alert('الجدول غير موجود');
       const w = window.open('', '_blank', 'width=900,height=700');
       w.document.write(`<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <title>${titleText}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-  <style>
-    body { font-family: "Cairo", sans-serif; padding: 16px; }
-    table { width:100%; }
-    th, td { text-align: center; }
-    @media print { body { margin:12px; } }
-  </style>
+<meta charset="utf-8">
+<title>${title || 'طباعة الجدول'}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+<style>
+  body{font-family:"Cairo",sans-serif;padding:16px}
+  th,td{text-align:center}
+</style>
 </head>
 <body>
-  <h4 class="text-center mb-3">${titleText}</h4>
+  <h4 class="text-center mb-3">${title || 'الجدول'}</h4>
   ${table.outerHTML}
   <script>
     window.onload = function(){
       window.print();
-      window.onfocus = function(){ setTimeout(() => window.close(), 300); };
+      window.onfocus = function(){ setTimeout(()=>window.close(), 250); };
     };
   <\/script>
 </body>
