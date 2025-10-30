@@ -100,6 +100,23 @@
               <tr><td colspan="7" class="text-muted text-center">جارٍ تحميل البيانات…</td></tr>
             </tbody>
           </table>
+
+          <!-- 🔎 فلترة حسب التاريخ (مضافة فقط) -->
+          <div class="row g-2 align-items-end mt-3">
+            <div class="col-sm-3">
+              <label class="form-label mb-1">من تاريخ</label>
+              <input type="date" id="filterFrom" class="form-control form-control-sm">
+            </div>
+            <div class="col-sm-3">
+              <label class="form-label mb-1">إلى تاريخ</label>
+              <input type="date" id="filterTo" class="form-control form-control-sm">
+            </div>
+            <div class="col-sm-6 d-flex gap-2">
+              <button id="applyDateFilter" class="btn btn-primary btn-sm"><i class="fa-solid fa-filter"></i> تطبيق الفلترة</button>
+              <button id="clearDateFilter" class="btn btn-outline-secondary btn-sm">إلغاء الفلترة</button>
+            </div>
+          </div>
+
           <div class="alert alert-success mt-3">إجمالي المصاريف: <b id="expCount">0</b></div>
         </div>
       </div>
@@ -181,7 +198,7 @@
   <script src="js/api.js"></script>
   <script src="js/expenses-frontend.js"></script>
 
-  <!-- زر الثلاث شحطات + منطق الطي (سطر/منطقنا الأخير) -->
+  <!-- زر الثلاث شحطات + منطق الطي -->
   <button id="toggleSidebar" class="btn-sidebar-toggle" aria-label="قائمة">
     <i class="fa fa-bars"></i>
   </button>
@@ -196,6 +213,59 @@
         body.classList.toggle("sidebar-collapsed");
         localStorage.setItem(key, body.classList.contains("sidebar-collapsed") ? "1" : "0");
       });
+    })();
+
+    // 🔎 فلترة صفوف الجدول حسب التاريخ (بدون لمس أي ملف آخر)
+    (function(){
+      const fromEl = document.getElementById('filterFrom');
+      const toEl   = document.getElementById('filterTo');
+      const btnGo  = document.getElementById('applyDateFilter');
+      const btnClr = document.getElementById('clearDateFilter');
+      const tb     = document.getElementById('dataTable');
+      const cntEl  = document.getElementById('expCount');
+
+      if (!tb || !btnGo || !btnClr) return;
+
+      function apply() {
+        const from = fromEl.value || '';
+        const to   = toEl.value   || '';
+        let shown = 0;
+
+        // نمشي على كل الصفوف (نترك صف العناوين)
+        tb.querySelectorAll('tbody tr').forEach(tr => {
+          // لو كان صف رسالة "جارٍ تحميل…" خليه كما هو
+          const tds = tr.querySelectorAll('td');
+          if (!tds.length) return;
+
+          const dateText = (tds[0]?.innerText || '').trim(); // أول عمود = التاريخ
+          // لو فاضي (مثلاً لسه ما تحمل) ما نخبيه
+          if (!dateText || dateText.includes('جارٍ')) { tr.style.display = ''; return; }
+
+          const d = dateText; // صيغة YYYY-MM-DD من الـfrontend
+          let ok = true;
+          if (from && d < from) ok = false;
+          if (to   && d > to)   ok = false;
+
+          tr.style.display = ok ? '' : 'none';
+          if (ok) shown++;
+        });
+
+        if (cntEl) cntEl.textContent = String(shown);
+      }
+
+      function clearFilter() {
+        fromEl.value = '';
+        toEl.value   = '';
+        tb.querySelectorAll('tbody tr').forEach(tr => tr.style.display = '');
+        // إعادة الحساب حسب الصفوف الظاهرة (بعد الإلغاء)
+        const visible = Array.from(tb.querySelectorAll('tbody tr'))
+          .filter(tr => tr.style.display !== 'none' && tr.querySelectorAll('td').length)
+          .length;
+        if (cntEl) cntEl.textContent = String(visible);
+      }
+
+      btnGo.addEventListener('click', apply);
+      btnClr.addEventListener('click', clearFilter);
     })();
   </script>
 
