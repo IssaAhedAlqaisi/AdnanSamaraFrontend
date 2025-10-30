@@ -59,12 +59,6 @@
       font-size: 3rem;
       color: #007bff;
     }
-    .chart-box {
-      background-color: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      padding: 20px;
-    }
     .stats-box {
       background: #fff;
       border-radius: 10px;
@@ -97,6 +91,8 @@
       <a href="suppliers.html" class="list-group-item"><i class="bi bi-shop"></i> الموردون</a>
       <a href="customers.html" class="list-group-item"><i class="bi bi-person-badge"></i> العملاء</a>
       <a href="settings.html" class="list-group-item"><i class="bi bi-gear"></i> الإعدادات</a>
+      <!-- (اختياري) رابط مباشر لقسم المحاسبة في السايدبار:
+      <a href="accounting.html" class="list-group-item"><i class="bi bi-calculator"></i> قسم المحاسبة</a> -->
     </div>
   </div>
 
@@ -133,6 +129,7 @@
             <p class="text-muted">إدارة الموظفين وأقسامهم ورواتبهم</p>
           </div>
         </div>
+
         <div class="col-md-4 col-lg-4">
           <div class="card card-hover text-center p-4" onclick="location.href='vehicles.html'">
             <div class="icon-box mb-3"><i class="bi bi-truck"></i></div>
@@ -140,6 +137,15 @@
             <p class="text-muted">تتبع حالة المركبات وصيانتها</p>
           </div>
         </div>
+        <!-- قسم المحاسبة (بنفس الستايل وبجانب المركبات) -->
+        <div class="col-md-4 col-lg-4">
+          <div class="card card-hover text-center p-4" onclick="location.href='accounting.html'">
+            <div class="icon-box mb-3"><i class="bi bi-calculator"></i></div>
+            <h5 class="fw-bold">قسم المحاسبة</h5>
+            <p class="text-muted">عرض الإيرادات والمصاريف مع الربح الصافي</p>
+          </div>
+        </div>
+
         <div class="col-md-4 col-lg-4">
           <div class="card card-hover text-center p-4" onclick="location.href='suppliers.html'">
             <div class="icon-box mb-3"><i class="bi bi-shop"></i></div>
@@ -155,7 +161,7 @@
           </div>
         </div>
 
-        <!-- *** الكرت: العقود الخارجية (يفتح صفحة جديدة بخيارات العقود) *** -->
+        <!-- الكرت: العقود الخارجية -->
         <div class="col-md-4 col-lg-4">
           <div class="card card-hover text-center p-4" onclick="location.href='contracts.html'">
             <div class="icon-box mb-3"><i class="bi bi-file-earmark-text"></i></div>
@@ -163,28 +169,9 @@
             <p class="text-muted">فتح صفحة العقود (توريد/عهدة) للطباعة</p>
           </div>
         </div>
-        <!-- *** نهاية الكرت *** -->
+      </div>
 
-      </div>
-        
-      <!-- بطاقة: قسم المحاسبة -->
-<div class="col-md-6 col-lg-4 mb-4">
-  <a href="accounting.html" class="text-decoration-none">
-    <div class="card shadow-sm h-100">
-      <div class="card-body text-center">
-        <i class="fa-solid fa-calculator fa-3x text-primary mb-3"></i>
-        <h4 class="fw-bold text-primary">قسم المحاسبة</h4>
-        <p class="text-muted mb-0">عرض الإيرادات والمصاريف مع الربح الصافي</p>
-      </div>
-    </div>
-  </a>
-</div>
-
-      <!-- الرسم البياني -->
-      <div class="chart-box mb-4">
-        <h6 class="fw-bold text-primary mb-3">الإيرادات والمصاريف (آخر 6 أشهر)</h6>
-        <canvas id="revExpChart" height="90"></canvas>
-      </div>
+      <!-- (تم حذف الرسم البياني كما طلبت) -->
 
       <!-- الإحصاءات -->
       <div class="row g-4 mb-4">
@@ -224,35 +211,20 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     document.getElementById("menu-toggle").addEventListener("click", () => {
       document.getElementById("sidebar-wrapper").classList.toggle("active");
-    });
-
-    // رسم بياني بسيط
-    const ctx = document.getElementById("revExpChart").getContext("2d");
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: ["مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر"],
-        datasets: [
-          { label: "الإيرادات", data: [5000, 8000, 7200, 9500, 11000, 12000], borderColor: "#007bff", fill: false, tension: 0.3 },
-          { label: "المصاريف", data: [3500, 4000, 3800, 5000, 6500, 6800], borderColor: "#dc3545", fill: false, tension: 0.3 }
-        ]
-      },
-      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
     });
   </script>
 
   <!-- روابط الطباعة القديمة تُركت كما هي تحسبًا لصفحات أخرى تستعملها -->
   <link rel="stylesheet" href="css/print.css">
   <script src="js/print-helper.js"></script>
-<script>
-  if (localStorage.getItem("loggedIn") !== "true") {
-    window.location.href = "login.html";
-  }
-</script>
+  <script>
+    if (localStorage.getItem("loggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
 
 </body>
 </html>
