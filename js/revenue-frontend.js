@@ -13,15 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // حفظ إيراد جديد
   const form = document.getElementById("revForm");
-  if (form) {
-    form.addEventListener("submit", onCreateRevenue);
-  }
+  if (form) form.addEventListener("submit", onCreateRevenue);
 
   // زر تطبيق الفلترة
   const filterBtn = document.getElementById("filterBtn");
-  if (filterBtn) {
-    filterBtn.addEventListener("click", applyFilters);
-  }
+  if (filterBtn) filterBtn.addEventListener("click", applyFilters);
 });
 
 /* =============== تحميل وعرض =============== */
@@ -32,11 +28,10 @@ async function loadRevenue() {
     const list = await api.get("/revenue");
     // نخزن النسخة الأصلية للفلترة
     REVENUE_DATA = Array.isArray(list) ? list : [];
-
     renderTable(REVENUE_DATA);
   } catch (err) {
     console.error("❌ خطأ تحميل الإيرادات:", err);
-    tb.innerHTML = `<tr><td colspan="9" class="text-danger text-center">فشل تحميل البيانات</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="8" class="text-danger text-center">فشل تحميل البيانات</td></tr>`;
     const rc = document.getElementById("revCount");
     if (rc) rc.textContent = "0";
   }
@@ -48,40 +43,34 @@ function renderTable(list) {
   if (!tb) return;
 
   if (!list.length) {
-    tb.innerHTML = `<tr><td colspan="9" class="text-center text-muted">لا توجد بيانات</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="8" class="text-center text-muted">لا توجد بيانات</td></tr>`;
     if (rc) rc.textContent = "0";
     return;
   }
 
   tb.innerHTML = list
-    .map(
-      (r) => `
-    <tr>
-      <td>${onlyDate(r.date) || "-"}</td>
-      <td>${fmt(r.amount)}</td>
-      <td>${r.payment_method || "-"}</td>
-      <td>${r.tank_type || "-"}</td>
-      <td>${extractWaterAmount(r.description) || "-"}</td>
-      <td>${r.source_type || "-"}</td>
-      <td>${r.driver_name || "-"}</td>
-      <td>${r.vehicle_number || "-"}</td>
-      <td>
-        <button class="btn btn-sm btn-danger" onclick="deleteRevenue(${r.id})">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </td>
-    </tr>`
-    )
+    .map((r) => {
+      const pay =
+        r.payment_type != null
+          ? r.payment_type
+          : r.payment_method != null
+          ? r.payment_method
+          : "-";
+      return `
+      <tr>
+        <td>${onlyDate(r.date) || "-"}</td>
+        <td>${fmt(r.amount)}</td>
+        <td>${pay}</td>
+        <td>${r.tank_type || "-"}</td>
+        <td>${r.water_amount != null ? fmt(r.water_amount) : "-"}</td>
+        <td>${r.source_type || "-"}</td>
+        <td>${r.driver_name || "-"}</td>
+        <td>${r.vehicle_number || "-"}</td>
+      </tr>`;
+    })
     .join("");
 
   if (rc) rc.textContent = String(list.length);
-}
-
-// يستخرج رقم كمية المياه من الوصف إن وُجد
-function extractWaterAmount(desc) {
-  if (!desc) return null;
-  const m = /(\d+(\.\d+)*)/.exec(desc);
-  return m ? m[1] : null;
 }
 
 /* =============== إنشاء سجل جديد =============== */
@@ -98,36 +87,24 @@ async function onCreateRevenue(e) {
     driver_name: f.driver_name.value || null,
     vehicle_number: f.vehicle_number.value || null,
     notes: f.notes.value || null,
+    // التاريخ يضبطه الباكند تلقائياً، وحقل الواجهة للعرض فقط
   };
 
   try {
     const res = await api.post("/revenue", payload);
     // نضيفه للذاكرة ونُعيد العرض
-    if (res && res.revenue) {
-      REVENUE_DATA.unshift(res.revenue);
+    const created = res && (res.revenue || res.data || res);
+    if (created) {
+      REVENUE_DATA.unshift(created);
       renderTable(REVENUE_DATA);
     }
     // اغلاق المودال وتنظيف
     f.reset();
-    const closeBtn = document.querySelector('#addModal .btn-close');
+    const closeBtn = document.querySelector("#addModal .btn-close");
     if (closeBtn) closeBtn.click();
   } catch (err) {
     console.error("❌ خطأ إضافة الإيراد:", err);
     alert("حدث خطأ أثناء الإضافة");
-  }
-}
-
-/* =============== حذف =============== */
-async function deleteRevenue(id) {
-  if (!confirm("هل تريد حذف هذا الإيراد؟")) return;
-  try {
-    await api.delete(`/revenue/${id}`);
-    // نحذف من الذاكرة ونُعيد العرض
-    REVENUE_DATA = REVENUE_DATA.filter((r) => r.id !== id);
-    renderTable(REVENUE_DATA);
-  } catch (err) {
-    console.error("❌ خطأ الحذف:", err);
-    alert("فشل حذف السجل");
   }
 }
 
