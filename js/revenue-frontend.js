@@ -87,7 +87,7 @@ function renderTable(list) {
         <td>${r.tank_type || "-"}</td>
         <td>${water != null ? fmt(water) : "-"}</td>
         <td>${r.source_type || "-"}</td>
-        <td>${r.driver_name || "-"}</td>
+        <td>${r.driver_name || "-"}</td>  <!-- نعرضه كـ "العميل" -->
         <td>${r.vehicle_number || "-"}</td>
         <td>${cleanNotes}</td>
         <td>
@@ -131,22 +131,20 @@ async function onSubmitRevenue(e) {
   e.preventDefault();
   const f = e.target;
 
-  const dateVal =
-    (f.date && f.date.value && f.date.value.trim() !== "")
-      ? f.date.value
-      : new Date().toISOString().slice(0,10);
+  // 👈 لو المستخدم أدخل تاريخ نرسله، وإلا ما نرسله حتى يضيفه الباك-إند تلقائيًا (تاريخ اليوم)
+  const userDate = (f.date && f.date.value && f.date.value.trim()) ? f.date.value.trim() : null;
 
   const payload = {
-    date: dateVal,
     amount: Number(f.amount.value || 0),
     payment_type: f.payment_type.value || "كاش",
     tank_type: f.tank_type.value || "نقلة مياه",
     water_amount: f.water_amount.value ? Number(f.water_amount.value) : null,
     source_type: f.source_type.value || "غير محدد",
-    driver_name: f.driver_name.value || null,     // نعرضه كـ "العميل" في الواجهة
+    driver_name: f.driver_name.value || null,     // يُعرض كـ "اسم العميل"
     vehicle_number: f.vehicle_number.value || null,
     notes: stampWaterInNotes(f.notes.value, f.water_amount.value ? Number(f.water_amount.value) : null),
   };
+  if (userDate) payload.date = userDate;
 
   try {
     if (EDIT_ID) {
@@ -212,7 +210,7 @@ function applyFilters() {
     const d = onlyDate(r.date) || "";
     if (fromDate && d < fromDate) return false;
     if (toDate && d > toDate) return false;
-    if (client && !(r.driver_name || "").includes(client)) return false;   // نعامل driver_name كاسم العميل
+    if (client && !(r.driver_name || "").includes(client)) return false;   // driver_name = اسم العميل
     if (carNo && !(r.vehicle_number || "").includes(carNo)) return false;
     return true;
   });
@@ -239,6 +237,7 @@ function printInvoiceForCurrentView() {
   const tableRows = rows
     .map((r) => {
       const water = readWaterFromRow(r);
+      const cleanNotes = (r.notes || "").replace(WATER_TAG_RE_GLOBAL, "").trim() || "-";
       return `
       <tr>
         <td>${onlyDate(r.date) || "-"}</td>
@@ -246,6 +245,7 @@ function printInvoiceForCurrentView() {
         <td>${water != null ? fmt(water) : "-"}</td>
         <td>${r.payment_type ?? r.payment_method ?? "-"}</td>
         <td>${fmt(r.amount)}</td>
+        <td>${cleanNotes}</td>
       </tr>`;
     })
     .join("");
@@ -277,7 +277,9 @@ th,td{text-align:center;vertical-align:middle}
 <div class="mb-3">العميل: <b>${client}</b>${fromDate || toDate ? ` — الفترة: <b>${fromDate || "—"}</b> إلى <b>${toDate || "—"}</b>` : ""}</div>
 <table class="table table-bordered">
   <thead class="table-light">
-    <tr><th>التاريخ</th><th>نوع النقلة</th><th>كمية المياه (م³)</th><th>طريقة الدفع</th><th>المبلغ (د.أ)</th></tr>
+    <tr>
+      <th>التاريخ</th><th>نوع النقلة</th><th>كمية المياه (م³)</th><th>طريقة الدفع</th><th>المبلغ (د.أ)</th><th>الملاحظات</th>
+    </tr>
   </thead>
   <tbody>${tableRows}</tbody>
 </table>
@@ -291,7 +293,7 @@ th,td{text-align:center;vertical-align:middle}
   w.document.close();
 }
 
-// تعبئة تاريخ اليوم عند فتح مودال الإضافة
+// تعبئة تاريخ اليوم تلقائيًا عند فتح مودال الإضافة فقط لو الحقل فاضي
 const addModalEl = document.getElementById('addModal');
 if (addModalEl) {
   addModalEl.addEventListener('show.bs.modal', () => {
