@@ -132,21 +132,24 @@ async function onSubmitRevenue(e) {
   e.preventDefault();
   const f = e.target;
 
-  const waterVal = f.water_amount.value ? Number(f.water_amount.value) : null;
+  // ✅ استخدم التاريخ الذي كتبه المستخدم،
+  // وإذا تركه فاضي نرسل تاريخ اليوم بصيغة YYYY-MM-DD
+  const dateVal =
+    (f.date && f.date.value && f.date.value.trim() !== "")
+      ? f.date.value
+      : new Date().toISOString().slice(0,10);
 
   const payload = {
+    date: dateVal,
     amount: Number(f.amount.value || 0),
     payment_type: f.payment_type.value || "كاش",
     tank_type: f.tank_type.value || "نقلة مياه",
-    // نرسلها إن أحببت، ولو الباك إند تجاهلها بنكون حافظينها بالملاحظات
-    water_amount: waterVal,
+    water_amount: f.water_amount.value ? Number(f.water_amount.value) : null,
     source_type: f.source_type.value || "غير محدد",
     driver_name: f.driver_name.value || null,
     vehicle_number: f.vehicle_number.value || null,
-    // ✅ خزّن الكمية داخل الملاحظات بوسم [W=...]
-    notes: stampWaterInNotes(f.notes.value, waterVal),
+    notes: stampWaterInNotes(f.notes.value, f.water_amount.value ? Number(f.water_amount.value) : null),
   };
-
   // ✅ التاريخ اختياري: أرسله فقط إذا المُستخدم أدخله
   if (f.date && f.date.value) payload.date = f.date.value;
 
@@ -291,4 +294,13 @@ th,td{text-align:center;vertical-align:middle}
 <script>window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}};<\/script>
 </body></html>`);
   w.document.close();
+}
+const addModalEl = document.getElementById('addModal');
+if (addModalEl) {
+  addModalEl.addEventListener('show.bs.modal', () => {
+    if (!EDIT_ID) {
+      const di = document.getElementById('date');
+      if (di && !di.value) di.value = new Date().toISOString().slice(0,10);
+    }
+  });
 }
