@@ -1,221 +1,182 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قسم المحاسبة | مؤسسة عدنان سماره</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body{font-family:"Cairo",sans-serif;background:#f7f9fc}
-    #sidebar-wrapper{
-      width:250px;position:fixed;right:0;top:0;height:100%;
-      background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;overflow-y:auto
-    }
-    #page-content-wrapper{margin-right:250px}
-    .list-group-item{background:transparent;color:#e0e7ff;border:none}
-    .list-group-item.active,.list-group-item:hover{background-color:rgba(255,255,255,.2);color:#fff}
-    thead.table-primary{background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff}
-    .stat-badge{font-weight:700}
-    @media print{
-      #sidebar-wrapper, .no-print, .navbar { display:none !important; }
-      #page-content-wrapper{ margin:0 !important; }
-      .card{ box-shadow:none !important; border:none !important; }
-    }
-  </style>
-</head>
-<body>
-  <!-- Sidebar -->
-  <div id="sidebar-wrapper">
-    <div class="text-center py-4">
-      <img src="images/logo.png" width="80" class="mb-2" alt="logo">
-      <h5 class="fw-bold">شركة عدنان سماره</h5>
-      <p class="mb-0 small">لنقل المياه</p>
-    </div>
-    <div class="list-group list-group-flush">
-      <a class="list-group-item" href="index.html"><i class="fa-solid fa-house me-2"></i> الشاشة الرئيسة</a>
-      <a class="list-group-item" href="revenue.html"><i class="fa-solid fa-sack-dollar me-2"></i> الإيرادات</a>
-      <a class="list-group-item" href="expenses.html"><i class="fa-solid fa-money-bill-wave me-2"></i> المصاريف</a>
-      <a class="list-group-item" href="employees.html"><i class="fa-solid fa-users me-2"></i> الموظفون</a>
-      <a class="list-group-item" href="vehicles.html"><i class="fa-solid fa-truck-droplet me-2"></i> المركبات</a>
-      <a class="list-group-item" href="suppliers.html"><i class="fa-solid fa-truck-field me-2"></i> الموردون</a>
-      <a class="list-group-item" href="customers.html"><i class="fa-solid fa-user-tie me-2"></i> العملاء</a>
-      <a class="list-group-item" href="settings.html"><i class="fa-solid fa-gear me-2"></i> الإعدادات</a>
-      <a class="list-group-item active" href="accounting.html"><i class="fa-solid fa-calculator me-2"></i> قسم المحاسبة</a>
-    </div>
-  </div>
+/* global api */
 
-  <!-- Content -->
-  <div id="page-content-wrapper">
-    <nav class="navbar bg-white shadow-sm">
-      <div class="container-fluid">
-        <span class="navbar-brand fw-bold text-primary">
-          <i class="fa-solid fa-calculator me-2"></i> قسم المحاسبة
-        </span>
-        <div class="no-print">
-          <a href="index.html" class="btn btn-outline-secondary">
-            <i class="fa-solid fa-arrow-rotate-left"></i> رجوع للقائمة الرئيسية
-          </a>
-        </div>
-      </div>
-    </nav>
+// أدوات صغيرة
+const onlyDate = (d)=> typeof d === 'string' ? d.split('T')[0] : (d || '');
+const fmt      = (n)=> (n==null||n==='') ? '0.00' : Number(n).toFixed(2);
+const payOf    = (r)=> r?.payment_type ?? r?.payment_method ?? r?.pay_method ?? '-';
 
-    <div class="container-fluid py-4">
-      <div class="row g-4">
-        <!-- الإيرادات -->
-        <div class="col-lg-6">
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-success mb-0"><i class="fa-solid fa-sack-dollar me-2"></i> جدول الإيرادات</h5>
-                <div class="no-print">
-                  <!-- أعدنا الـ id + أبقينا الطباعة للجدول فقط -->
-                  <button id="printRevenueBtn"
-                          class="btn btn-outline-secondary btn-sm"
-                          onclick="printTable('revenueTable','جدول الإيرادات')">
-                    <i class="fa-solid fa-print"></i> طباعة الجدول
-                  </button>
-                </div>
-              </div>
+// حالة
+let REVENUE = [];
+let EXPENSES = [];
 
-              <table class="table table-hover text-center align-middle" id="revenueTable">
-                <thead class="table-primary">
-                  <tr>
-                    <th>التاريخ</th>
-                    <th>المصدر/النوع</th>
-                    <th>المبلغ</th>
-                  </tr>
-                </thead>
-                <tbody id="revenueRows">
-                  <tr><td colspan="3" class="text-muted">جارٍ التحميل…</td></tr>
-                </tbody>
-              </table>
+// عناصر الإيرادات
+const revRows   = document.getElementById('revRows');
+const revFromEl = document.getElementById('revFrom');
+const revToEl   = document.getElementById('revTo');
+const revClient = document.getElementById('revClient');
+const revPay    = document.getElementById('revPay');
+const revApply  = document.getElementById('revApply');
+const revClear  = document.getElementById('revClear');
+const revTotal  = document.getElementById('revTotal');
 
-              <div class="d-flex flex-wrap gap-2 align-items-end no-print">
-                <div>
-                  <label class="form-label mb-1">من تاريخ</label>
-                  <input type="date" id="revFrom" class="form-control form-control-sm">
-                </div>
-                <div>
-                  <label class="form-label mb-1">إلى تاريخ</label>
-                  <input type="date" id="revTo" class="form-control form-control-sm">
-                </div>
-                <button id="filterRevenueBtn" class="btn btn-primary btn-sm">
-                  <i class="fa-solid fa-filter"></i> فلترة
-                </button>
-                <span class="ms-auto stat-badge">إجمالي الإيرادات: <span id="revTotal">0.00</span></span>
-              </div>
-            </div>
-          </div>
-        </div>
+// عناصر المصاريف
+const expRows   = document.getElementById('expRows');
+const expFromEl = document.getElementById('expFrom');
+const expToEl   = document.getElementById('expTo');
+const expOwner  = document.getElementById('expOwner');
+const expPay    = document.getElementById('expPay');
+const expApply  = document.getElementById('expApply');
+const expClear  = document.getElementById('expClear');
+const expTotal  = document.getElementById('expTotal');
 
-        <!-- المصاريف -->
-        <div class="col-lg-6">
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-danger mb-0"><i class="fa-solid fa-money-bill-wave me-2"></i> جدول المصاريف</h5>
-                <div class="no-print">
-                  <!-- أعدنا الـ id + أبقينا الطباعة للجدول فقط -->
-                  <button id="printExpensesBtn"
-                          class="btn btn-outline-secondary btn-sm"
-                          onclick="printTable('expensesTable','جدول المصاريف')">
-                    <i class="fa-solid fa-print"></i> طباعة الجدول
-                  </button>
-                </div>
-              </div>
+// الملخص
+const sumRevEl   = document.getElementById('sumRev');
+const sumExpEl   = document.getElementById('sumExp');
+const netProfit  = document.getElementById('netProfit');
+const profitPct  = document.getElementById('profitPct');
 
-              <table class="table table-hover text-center align-middle" id="expensesTable">
-                <thead class="table-primary">
-                  <tr>
-                    <th>التاريخ</th>
-                    <th>النوع</th>
-                    <th>المبلغ</th>
-                  </tr>
-                </thead>
-                <tbody id="expensesRows">
-                  <tr><td colspan="3" class="text-muted">جارٍ التحميل…</td></tr>
-                </tbody>
-              </table>
+// طباعة جدول
+window.printTable = function(tableId){
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(`
+    <!doctype html><html lang="ar" dir="rtl"><head>
+      <meta charset="utf-8"><title>طباعة</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+      <style>body{font-family:"Cairo",sans-serif;padding:16px}</style>
+    </head><body>${table.outerHTML}
+    <script>window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}}<\/script>
+    </body></html>
+  `);
+  w.document.close();
+};
 
-              <div class="d-flex flex-wrap gap-2 align-items-end no-print">
-                <div>
-                  <label class="form-label mb-1">من تاريخ</label>
-                  <input type="date" id="expFrom" class="form-control form-control-sm">
-                </div>
-                <div>
-                  <label class="form-label mb-1">إلى تاريخ</label>
-                  <input type="date" id="expTo" class="form-control form-control-sm">
-                </div>
-                <button id="filterExpensesBtn" class="btn btn-primary btn-sm">
-                  <i class="fa-solid fa-filter"></i> فلترة
-                </button>
-                <span class="ms-auto stat-badge">إجمالي المصاريف: <span id="expTotal">0.00</span></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+// تحميل
+async function loadRevenue(){
+  try{
+    const list = await api.get('/revenue');      // نفس اندبوينتكم القديم
+    REVENUE = Array.isArray(list) ? list : [];
+    renderRevenue(REVENUE);
+  }catch(e){
+    revRows.innerHTML = `<tr><td colspan="4" class="text-danger">فشل تحميل الإيرادات</td></tr>`;
+  }
+}
 
-      <!-- الملخص -->
-      <div class="card shadow-sm mt-4">
-        <div class="card-body">
-          <h5 class="fw-bold mb-3"><i class="fa-solid fa-scale-balanced me-2"></i> الملخص</h5>
-          <div class="row g-3">
-            <div class="col-md-4">
-              <div class="alert alert-success mb-0">إجمالي الإيرادات (المفلترة): <b id="revTotalSummary">0.00</b></div>
-            </div>
-            <div class="col-md-4">
-              <div class="alert alert-danger mb-0">إجمالي المصاريف (المفلترة): <b id="expTotalSummary">0.00</b></div>
-            </div>
-            <div class="col-md-4">
-              <div class="alert alert-info mb-0">
-                الربح الصافي: <b id="profitValue">0.00</b>
-                — نسبة الربح من الإيراد: <b id="profitPercent">0%</b>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+async function loadExpenses(){
+  try{
+    const list = await api.get('/expenses');     // نفس اندبوينت المصاريف
+    EXPENSES = Array.isArray(list) ? list : [];
+    renderExpenses(EXPENSES);
+  }catch(e){
+    expRows.innerHTML = `<tr><td colspan="5" class="text-danger">فشل تحميل المصاريف</td></tr>`;
+  }
+}
 
-    </div><!-- /container -->
-  </div><!-- /content -->
+// فلترة وعرض — الإيرادات
+function applyRevFilter(data){
+  const f = revFromEl.value || '';
+  const t = revToEl.value || '';
+  const c = (revClient.value || '').trim();
+  const p = (revPay.value || '').trim().toLowerCase();
 
-  <script src="js/api.js"></script>
-  <script src="js/accounting.js"></script>
+  return data.filter(r=>{
+    const d  = onlyDate(r.date);
+    const nm = (r.driver_name || '').trim();     // اسم العميل من نفس الحقل القديم
+    const py = (payOf(r) || '').toString().toLowerCase();
 
-  <!-- طباعة جدول فقط -->
-  <script>
-    function printTable(tableId, title){
-      const table = document.getElementById(tableId);
-      if (!table) return alert('الجدول غير موجود');
-      const w = window.open('', '_blank', 'width=900,height=700');
-      w.document.write(`<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8">
-<title>${title || 'طباعة الجدول'}</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-<style>
-  body{font-family:"Cairo",sans-serif;padding:16px}
-  th,td{text-align:center}
-</style>
-</head>
-<body>
-  <h4 class="text-center mb-3">${title || 'الجدول'}</h4>
-  ${table.outerHTML}
-  <script>
-    window.onload = function(){
-      window.print();
-      window.onfocus = function(){ setTimeout(()=>window.close(), 250); };
-    };
-  <\/script>
-</body>
-</html>`);
-      w.document.close();
-    }
-  </script>
-</body>
-</html>
+    if (f && d < f) return false;
+    if (t && d > t) return false;
+    if (c && !nm.includes(c)) return false;
+    if (p && py !== p) return false;
+    return true;
+  });
+}
+function renderRevenue(all){
+  const list = applyRevFilter(all);
+  if (!list.length){
+    revRows.innerHTML = `<tr><td colspan="4" class="text-muted">لا توجد بيانات</td></tr>`;
+  }else{
+    revRows.innerHTML = list.map(r=>`
+      <tr>
+        <td>${onlyDate(r.date) || '-'}</td>
+        <td>${r.driver_name || '-'}</td>
+        <td>${payOf(r)}</td>
+        <td>${fmt(r.amount)}</td>
+      </tr>
+    `).join('');
+  }
+  const total = list.reduce((s,r)=> s + Number(r.amount || 0), 0);
+  revTotal.textContent = fmt(total);
+  updateSummary();
+}
+
+// فلترة وعرض — المصاريف
+function applyExpFilter(data){
+  const f = expFromEl.value || '';
+  const t = expToEl.value || '';
+  const o = (expOwner.value || '').trim();
+  const p = (expPay.value || '').trim().toLowerCase();
+
+  return data.filter(r=>{
+    const d  = onlyDate(r.date);
+    const ow = (r.beneficiary || '').trim();
+    const py = (r.pay_method || '').toString().toLowerCase();
+
+    if (f && d < f) return false;
+    if (t && d > t) return false;
+    if (o && !ow.includes(o)) return false;
+    if (p && py !== p) return false;
+    return true;
+  });
+}
+function renderExpenses(all){
+  const list = applyExpFilter(all);
+  if (!list.length){
+    expRows.innerHTML = `<tr><td colspan="5" class="text-muted">لا توجد بيانات</td></tr>`;
+  }else{
+    expRows.innerHTML = list.map(r=>`
+      <tr>
+        <td>${onlyDate(r.date) || '-'}</td>
+        <td>${r.type_name || '-'}</td>
+        <td>${r.beneficiary || '-'}</td>
+        <td>${r.pay_method || '-'}</td>
+        <td>${fmt(r.amount)}</td>
+      </tr>
+    `).join('');
+  }
+  const total = list.reduce((s,r)=> s + Number(r.amount || 0), 0);
+  expTotal.textContent = fmt(total);
+  updateSummary();
+}
+
+// الملخص
+function updateSummary(){
+  const revSum = Number((revTotal.textContent || '0').replace(/,/g,''));
+  const expSum = Number((expTotal.textContent || '0').replace(/,/g,''));
+  const net    = revSum - expSum;
+  const pct    = revSum > 0 ? (net / revSum * 100) : 0;
+
+  sumRevEl.textContent  = fmt(revSum);
+  sumExpEl.textContent  = fmt(expSum);
+  netProfit.textContent = fmt(net);
+  profitPct.textContent = `${pct.toFixed(2)}%`;
+}
+
+// أحداث الفلترة
+revApply?.addEventListener('click', ()=> renderRevenue(REVENUE));
+revClear?.addEventListener('click', ()=>{
+  revFromEl.value = revToEl.value = revClient.value = ''; revPay.value='';
+  renderRevenue(REVENUE);
+});
+expApply?.addEventListener('click', ()=> renderExpenses(EXPENSES));
+expClear?.addEventListener('click', ()=>{
+  expFromEl.value = expToEl.value = expOwner.value = ''; expPay.value='';
+  renderExpenses(EXPENSES);
+});
+
+// تشغيل أولي
+(function init(){
+  loadRevenue();
+  loadExpenses();
+})();
