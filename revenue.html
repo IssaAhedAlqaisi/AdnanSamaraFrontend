@@ -80,11 +80,12 @@
                 <th>مصدر الماء</th>
                 <th>العميل</th>
                 <th>المركبة</th>
+                <th>الملاحظات</th>
                 <th>إجراءات</th>
               </tr>
             </thead>
             <tbody id="rows">
-              <tr><td colspan="9" class="text-center text-muted">جارٍ تحميل البيانات...</td></tr>
+              <tr><td colspan="10" class="text-center text-muted">جارٍ تحميل البيانات...</td></tr>
             </tbody>
           </table>
         </div>
@@ -137,7 +138,6 @@
         </div>
         <div class="modal-body">
           <form id="revForm" class="row g-3">
-            <!-- ✅ التاريخ قابل للتعديل واختياري -->
             <div class="col-md-4"><label class="form-label">التاريخ</label><input type="date" id="date" class="form-control"></div>
             <div class="col-md-4"><label class="form-label">المبلغ</label><input type="number" id="amount" class="form-control" required></div>
             <div class="col-md-4"><label class="form-label">طريقة الدفع</label>
@@ -148,11 +148,11 @@
               </select>
             </div>
             <div class="col-md-4"><label class="form-label">نوع النقلة</label><input id="tank_type" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">كمية المياه (م³)</label><input type="number" id="water_amount" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">كمية المياه (م³)</label><input type="number" id="water_amount" class="form-control" step="0.01"></div>
             <div class="col-md-4"><label class="form-label">مصدر الماء</label><input type="text" id="source_type" class="form-control" placeholder="مثال: بئر / محطة / صهريج"></div>
             <div class="col-md-4"><label class="form-label">اسم العميل</label><input id="driver_name" class="form-control"></div>
             <div class="col-md-4"><label class="form-label">رقم المركبة</label><input id="vehicle_number" class="form-control"></div>
-            <div class="col-md-12"><label class="form-label">ملاحظات</label><input id="notes" class="form-control"></div>
+            <div class="col-md-12"><label class="form-label">ملاحظات</label><input id="notes" class="form-control" placeholder="أي ملاحظات إضافية"></div>
             <div class="col-12 text-end mt-3"><button class="btn btn-success" id="submitBtn"><i class="fa-solid fa-check"></i> حفظ</button></div>
           </form>
         </div>

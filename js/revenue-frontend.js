@@ -4,8 +4,8 @@ const fmt = (n) => (n == null || n === "" ? "-" : Number(n).toFixed(2));
 const onlyDate = (d) => (typeof d === "string" ? d.split("T")[0] : d);
 
 // ====== وسوم كمية المياه في الملاحظات ======
-const WATER_TAG_RE = /\s*\[W=([0-9]+(?:\.[0-9]+)?)\]\s*/;          // لاستخراج القيمة
-const WATER_TAG_RE_GLOBAL = /\s*\[W=[^\]]*\]\s*/g;                 // لحذف أي وسم قديم
+const WATER_TAG_RE = /\s*\[W=([0-9]+(?:\.[0-9]+)?)\]\s*/;
+const WATER_TAG_RE_GLOBAL = /\s*\[W=[^\]]*\]\s*/g;
 
 function readWaterFromRow(r) {
   if (r && r.water_amount != null && r.water_amount !== "") {
@@ -22,7 +22,7 @@ function readWaterFromRow(r) {
 function stampWaterInNotes(notes, waterVal) {
   const clean = (notes || "").replace(WATER_TAG_RE_GLOBAL, "").trim();
   if (waterVal == null || waterVal === "" || Number.isNaN(Number(waterVal))) {
-    return clean; // ما في كمية، خليه بدون وسم
+    return clean;
   }
   return (clean ? clean + " " : "") + `[W=${Number(waterVal)}]`;
 }
@@ -55,7 +55,7 @@ async function loadRevenue() {
     renderTable(REVENUE_DATA);
   } catch (err) {
     console.error("❌ خطأ تحميل الإيرادات:", err);
-    tb.innerHTML = `<tr><td colspan="9" class="text-danger text-center">فشل تحميل البيانات</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="10" class="text-danger text-center">فشل تحميل البيانات</td></tr>`;
     const rc = document.getElementById("revCount");
     if (rc) rc.textContent = "0";
   }
@@ -69,7 +69,7 @@ function renderTable(list) {
   CURRENT_VIEW = list.slice();
 
   if (!list.length) {
-    tb.innerHTML = `<tr><td colspan="9" class="text-center text-muted">لا توجد بيانات</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="10" class="text-center text-muted">لا توجد بيانات</td></tr>`;
     if (rc) rc.textContent = "0";
     return;
   }
@@ -78,6 +78,7 @@ function renderTable(list) {
     .map((r) => {
       const pay = r.payment_type ?? r.payment_method ?? "-";
       const water = readWaterFromRow(r);
+      const cleanNotes = (r.notes || "").replace(WATER_TAG_RE_GLOBAL, "").trim() || "-";
       return `
       <tr>
         <td>${onlyDate(r.date) || "-"}</td>
@@ -88,6 +89,7 @@ function renderTable(list) {
         <td>${r.source_type || "-"}</td>
         <td>${r.driver_name || "-"}</td>
         <td>${r.vehicle_number || "-"}</td>
+        <td>${cleanNotes}</td>
         <td>
           <button class="btn btn-sm btn-warning me-1" title="تعديل" onclick="startEdit(${r.id})"><i class="fa-solid fa-pen"></i></button>
           <button class="btn btn-sm btn-danger"  title="حذف"   onclick="deleteRevenue(${r.id})"><i class="fa-solid fa-trash"></i></button>
@@ -113,15 +115,12 @@ function startEdit(id) {
   document.getElementById("payment_type").value = (row.payment_type ?? row.payment_method) || "كاش";
   document.getElementById("tank_type").value = row.tank_type ?? "";
 
-  // ✅ املأ كمية المياه من الحقل أو من الوسم في الملاحظات
   const w = readWaterFromRow(row);
   document.getElementById("water_amount").value = w != null ? w : "";
 
   document.getElementById("source_type").value = row.source_type ?? "";
   document.getElementById("driver_name").value = row.driver_name ?? "";
   document.getElementById("vehicle_number").value = row.vehicle_number ?? "";
-
-  // اظهر الملاحظات بدون الوسم القديم (لو موجود)
   document.getElementById("notes").value = (row.notes || "").replace(WATER_TAG_RE_GLOBAL, "").trim();
 
   const modal = new bootstrap.Modal(document.getElementById("addModal"));
@@ -132,8 +131,6 @@ async function onSubmitRevenue(e) {
   e.preventDefault();
   const f = e.target;
 
-  // ✅ استخدم التاريخ الذي كتبه المستخدم،
-  // وإذا تركه فاضي نرسل تاريخ اليوم بصيغة YYYY-MM-DD
   const dateVal =
     (f.date && f.date.value && f.date.value.trim() !== "")
       ? f.date.value
@@ -146,12 +143,10 @@ async function onSubmitRevenue(e) {
     tank_type: f.tank_type.value || "نقلة مياه",
     water_amount: f.water_amount.value ? Number(f.water_amount.value) : null,
     source_type: f.source_type.value || "غير محدد",
-    driver_name: f.driver_name.value || null,
+    driver_name: f.driver_name.value || null,     // نعرضه كـ "العميل" في الواجهة
     vehicle_number: f.vehicle_number.value || null,
     notes: stampWaterInNotes(f.notes.value, f.water_amount.value ? Number(f.water_amount.value) : null),
   };
-  // ✅ التاريخ اختياري: أرسله فقط إذا المُستخدم أدخله
-  if (f.date && f.date.value) payload.date = f.date.value;
 
   try {
     if (EDIT_ID) {
@@ -163,7 +158,7 @@ async function onSubmitRevenue(e) {
           if (idx > -1) REVENUE_DATA[idx] = { ...REVENUE_DATA[idx], ...updated };
         }
       } catch {
-        // لو ما في PUT، نعمل حذف ثم إضافة (fallback)
+        // Fallback لو PUT غير متاح
         await api.delete(`/revenue/${EDIT_ID}`);
         const res = await api.post("/revenue", payload);
         const created = res && (res.revenue || res.data || res);
@@ -217,7 +212,7 @@ function applyFilters() {
     const d = onlyDate(r.date) || "";
     if (fromDate && d < fromDate) return false;
     if (toDate && d > toDate) return false;
-    if (client && !(r.driver_name || "").includes(client)) return false;
+    if (client && !(r.driver_name || "").includes(client)) return false;   // نعامل driver_name كاسم العميل
     if (carNo && !(r.vehicle_number || "").includes(carNo)) return false;
     return true;
   });
@@ -295,6 +290,8 @@ th,td{text-align:center;vertical-align:middle}
 </body></html>`);
   w.document.close();
 }
+
+// تعبئة تاريخ اليوم عند فتح مودال الإضافة
 const addModalEl = document.getElementById('addModal');
 if (addModalEl) {
   addModalEl.addEventListener('show.bs.modal', () => {
