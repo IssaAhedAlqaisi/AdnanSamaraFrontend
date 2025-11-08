@@ -1,13 +1,11 @@
 /* global api, bootstrap */
 
-// أدوات
 const fmt = (n) => (n == null ? "-" : Number(n).toFixed(2));
 const onlyDate = (d) => (typeof d === "string" ? d.split("T")[0] : d);
 
-// حالة
 let REVENUE_DATA = [];
-let CURRENT_VIEW = [];       // آخر قائمة معروضة (للـفاتورة/الطباعة)
-let EDIT_ID = null;          // إن كنا نعدّل سجلًا
+let CURRENT_VIEW = [];
+let EDIT_ID = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   loadRevenue();
@@ -43,7 +41,7 @@ function renderTable(list) {
   const rc = document.getElementById("revCount");
   if (!tb) return;
 
-  CURRENT_VIEW = list.slice(); // احفظ العرض الحالي
+  CURRENT_VIEW = list.slice();
 
   if (!list.length) {
     tb.innerHTML = `<tr><td colspan="9" class="text-center text-muted">لا توجد بيانات</td></tr>`;
@@ -64,12 +62,8 @@ function renderTable(list) {
         <td>${r.driver_name || "-"}</td>
         <td>${r.vehicle_number || "-"}</td>
         <td>
-          <button class="btn btn-sm btn-warning me-1" title="تعديل" onclick="startEdit(${r.id})">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button class="btn btn-sm btn-danger" title="حذف" onclick="deleteRevenue(${r.id})">
-            <i class="fa-solid fa-trash"></i>
-          </button>
+          <button class="btn btn-sm btn-warning me-1" title="تعديل" onclick="startEdit(${r.id})"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-sm btn-danger"  title="حذف"   onclick="deleteRevenue(${r.id})"><i class="fa-solid fa-trash"></i></button>
         </td>
       </tr>`;
   }).join("");
@@ -86,17 +80,17 @@ function startEdit(id) {
   document.getElementById("modalTitle").innerHTML = `<i class="fa-solid fa-pen me-2"></i> تعديل الإيراد`;
   document.getElementById("submitBtn").innerHTML = `<i class="fa-solid fa-save"></i> حفظ التعديل`;
 
-  // املأ الحقول (نفس المعرفات)
+  // ✅ عبّئ التاريخ القابل للتعديل
+  document.getElementById("date").value = onlyDate(row.date) || "";
   document.getElementById("amount").value = row.amount ?? "";
   document.getElementById("payment_type").value = (row.payment_type ?? row.payment_method) || "كاش";
   document.getElementById("tank_type").value = row.tank_type ?? "";
   document.getElementById("water_amount").value = row.water_amount ?? "";
   document.getElementById("source_type").value = row.source_type ?? "";
-  document.getElementById("driver_name").value = row.driver_name ?? "";      // اسم العميل
+  document.getElementById("driver_name").value = row.driver_name ?? "";
   document.getElementById("vehicle_number").value = row.vehicle_number ?? "";
   document.getElementById("notes").value = row.notes ?? "";
 
-  // افتح المودال
   const modal = new bootstrap.Modal(document.getElementById("addModal"));
   modal.show();
 }
@@ -111,14 +105,16 @@ async function onSubmitRevenue(e) {
     tank_type: f.tank_type.value || "نقلة مياه",
     water_amount: f.water_amount.value ? Number(f.water_amount.value) : null,
     source_type: f.source_type.value || "غير محدد",
-    driver_name: f.driver_name.value || null,     // اسم العميل (واجهة فقط)
+    driver_name: f.driver_name.value || null,
     vehicle_number: f.vehicle_number.value || null,
     notes: f.notes.value || null,
   };
 
+  // ✅ التاريخ اختياري: أرسله فقط إذا المُستخدم أدخله
+  if (f.date && f.date.value) payload.date = f.date.value; // بصيغة YYYY-MM-DD
+
   try {
     if (EDIT_ID) {
-      // نحاول PUT، وإن فشل نفذ حذف+إضافة كحل احتياطي
       try {
         const res = await api.put(`/revenue/${EDIT_ID}`, payload);
         const updated = res && (res.revenue || res.data || res);
@@ -146,7 +142,6 @@ async function onSubmitRevenue(e) {
     document.getElementById("submitBtn").innerHTML = `<i class="fa-solid fa-check"></i> حفظ`;
     f.reset();
 
-    // اغلاق المودال
     const closeBtn = document.querySelector("#addModal .btn-close");
     if (closeBtn) closeBtn.click();
 
@@ -181,10 +176,8 @@ function applyFilters() {
     const d = onlyDate(r.date) || "";
     if (fromDate && d < fromDate) return false;
     if (toDate && d > toDate) return false;
-
-    if (client && !(r.driver_name || "").includes(client)) return false; // اسم العميل
+    if (client && !(r.driver_name || "").includes(client)) return false;
     if (carNo && !(r.vehicle_number || "").includes(carNo)) return false;
-
     return true;
   });
 
@@ -202,7 +195,7 @@ function printInvoiceForCurrentView() {
 
   const totalAmount = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
   const totalWater  = rows.reduce((s, r) => s + Number(r.water_amount || 0), 0);
-  const invoiceNo   = "01-" + new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0,14); // 01-YYYYMMDDHHMMSS
+  const invoiceNo   = "01-" + new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0,14);
 
   const tableRows = rows.map(r => `
     <tr>
@@ -216,70 +209,17 @@ function printInvoiceForCurrentView() {
 
   const w = window.open("", "_blank", "width=900,height=700");
   w.document.write(`<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8">
-<title>فاتورة - ${client}</title>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>فاتورة - ${client}</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-<style>
-  body{font-family:"Cairo",sans-serif;padding:18px}
-  .inv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-  .brand{font-weight:700;color:#1d4ed8}
-  .badge-no{font-weight:700}
-  table{width:100%}
-  th,td{text-align:center;vertical-align:middle}
-  .totals{margin-top:16px}
-  @media print { body{margin:12px} }
-</style>
-</head>
-<body>
-  <div class="inv-head">
-    <div>
-      <div class="brand">مؤسسة عدنان سمارة لنقل المياه</div>
-      <div class="text-muted">هاتف: — | عنوان: —</div>
-    </div>
-    <div class="text-end">
-      <div class="badge bg-primary badge-no">رقم الفاتورة: ${invoiceNo}</div>
-      <div>التاريخ: ${new Date().toLocaleDateString("ar-EG")}</div>
-    </div>
-  </div>
-
-  <h5 class="mb-1">فاتورة عميل</h5>
-  <div class="mb-3">العميل: <b>${client}</b>${fromDate || toDate ? ` — الفترة: <b>${fromDate || "—"}</b> إلى <b>${toDate || "—"}</b>` : ""}</div>
-
-  <table class="table table-bordered">
-    <thead class="table-light">
-      <tr>
-        <th>التاريخ</th>
-        <th>نوع النقلة</th>
-        <th>كمية المياه (م³)</th>
-        <th>طريقة الدفع</th>
-        <th>المبلغ (د.أ)</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${tableRows}
-    </tbody>
-  </table>
-
-  <div class="row totals">
-    <div class="col-md-6">
-      إجمالي عدد السجلات: <b>${rows.length}</b><br>
-      إجمالي الكمية (م³): <b>${fmt(totalWater)}</b>
-    </div>
-    <div class="col-md-6 text-end">
-      <h5>الإجمالي المستحق: <b>${fmt(totalAmount)} د.أ</b></h5>
-    </div>
-  </div>
-
-  <div class="mt-4">
-    <small class="text-muted">هذه الفاتورة مُولّدة من قسم الإيرادات — رمز الخدمة: 01 (مياه)</small>
-  </div>
-
-  <script>
-    window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}};
-  <\/script>
-</body>
-</html>`);
+<style>body{font-family:"Cairo",sans-serif;padding:18px}.inv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.brand{font-weight:700;color:#1d4ed8}.badge-no{font-weight:700}th,td{text-align:center;vertical-align:middle}@media print{body{margin:12px}}</style>
+</head><body>
+<div class="inv-head"><div><div class="brand">مؤسسة عدنان سمارة لنقل المياه</div><div class="text-muted">هاتف: — | عنوان: —</div></div><div class="text-end"><div class="badge bg-primary badge-no">رقم الفاتورة: ${invoiceNo}</div><div>التاريخ: ${new Date().toLocaleDateString("ar-EG")}</div></div></div>
+<h5 class="mb-1">فاتورة عميل</h5>
+<div class="mb-3">العميل: <b>${client}</b>${fromDate || toDate ? ` — الفترة: <b>${fromDate || "—"}</b> إلى <b>${toDate || "—"}</b>` : ""}</div>
+<table class="table table-bordered"><thead class="table-light"><tr><th>التاريخ</th><th>نوع النقلة</th><th>كمية المياه (م³)</th><th>طريقة الدفع</th><th>المبلغ (د.أ)</th></tr></thead><tbody>${tableRows}</tbody></table>
+<div class="row mt-2"><div class="col-md-6">إجمالي عدد السجلات: <b>${rows.length}</b><br>إجمالي الكمية (م³): <b>${fmt(totalWater)}</b></div><div class="col-md-6 text-end"><h5>الإجمالي المستحق: <b>${fmt(totalAmount)} د.أ</b></h5></div></div>
+<small class="text-muted d-block mt-3">هذه الفاتورة مُولّدة من قسم الإيرادات — رمز الخدمة: 01 (مياه)</small>
+<script>window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}};<\/script>
+</body></html>`);
   w.document.close();
 }
