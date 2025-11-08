@@ -10,40 +10,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
     body{font-family:"Cairo",sans-serif;background:#f7f9fc}
-
-    /* ===== Sidebar & content ===== */
-    #sidebar-wrapper{
-      width:250px;position:fixed;right:0;top:0;height:100%;
-      background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;overflow-y:auto;
-      transition: transform .2s ease;
-      transform: translateX(0);
-    }
-    #page-content-wrapper{
-      margin-right:250px;
-      transition: margin-right .2s ease;
-    }
-    /* عند الطي */
-    body.sidebar-collapsed #sidebar-wrapper{ transform: translateX(250px); }
-    body.sidebar-collapsed #page-content-wrapper{ margin-right:0; }
-
+    #sidebar-wrapper{width:250px;position:fixed;right:0;top:0;height:100%;background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;overflow-y:auto;transition: transform .2s ease;transform: translateX(0)}
+    #page-content-wrapper{margin-right:250px;transition: margin-right .2s ease}
+    body.sidebar-collapsed #sidebar-wrapper{ transform: translateX(250px) }
+    body.sidebar-collapsed #page-content-wrapper{ margin-right:0 }
     .list-group-item{background:transparent;color:#e0e7ff;border:none}
     .list-group-item.active,.list-group-item:hover{background-color:rgba(255,255,255,.2);color:#fff}
     thead.table-primary{background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff}
-
-    /* زر الثلاث شحطات العائم */
-    .btn-sidebar-toggle{
-      position: fixed; top: 14px; right: 266px; z-index: 1055;
-      width: 42px; height: 42px; border-radius: 10px;
-      display:flex; align-items:center; justify-content:center;
-      background:#1e73ff; color:#fff; border:none; box-shadow:0 6px 18px #1e73ff44;
-      cursor:pointer; transition:transform .15s ease, right .2s ease;
-    }
-    .btn-sidebar-toggle:active{ transform: scale(.96); }
-    body.sidebar-collapsed .btn-sidebar-toggle{ right:16px; }
-
-    /* إبعاد عنوان القسم عن زر الثلاث شحطات */
-    .navbar .navbar-brand{ margin-right:110px; }
-    body.sidebar-collapsed .navbar .navbar-brand{ margin-right:70px; }
+    .btn-sidebar-toggle{position: fixed; top: 14px; right: 266px; z-index: 1055; width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center; background:#1e73ff; color:#fff; border:none; box-shadow:0 6px 18px #1e73ff44; cursor:pointer; transition:transform .15s ease, right .2s ease}
+    .btn-sidebar-toggle:active{ transform: scale(.96) }
+    body.sidebar-collapsed .btn-sidebar-toggle{ right:16px }
+    .navbar .navbar-brand{ margin-right:110px }
+    body.sidebar-collapsed .navbar .navbar-brand{ margin-right:70px }
   </style>
 </head>
 <body>
@@ -90,7 +68,7 @@
                 <th>النوع</th>
                 <th>المبلغ</th>
                 <th>طريقة الدفع</th>
-                <th>اسم صاحب المصروف</th><!-- ← تغيير الاسم فقط، الحقل باك-إند يبقى beneficiary -->
+                <th>اسم صاحب المصروف</th>
                 <th>الوصف</th>
                 <th>إجراءات</th>
               </tr>
@@ -100,7 +78,7 @@
             </tbody>
           </table>
 
-          <!-- 🔎 فلترة -->
+          <!-- فلاتر -->
           <div class="row g-2 align-items-end mt-3">
             <div class="col-sm-3">
               <label class="form-label mb-1">من تاريخ</label>
@@ -126,7 +104,7 @@
     </div>
   </div>
 
-  <!-- Modal: إضافة مصروف -->
+  <!-- Modal: إضافة/تعديل مصروف -->
   <div class="modal fade" id="addExpenseModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -159,7 +137,7 @@
               </select>
             </div>
             <div class="col-md-6">
-              <label class="form-label">اسم صاحب المصروف</label><!-- ← تغيير تسمية الحقل فقط -->
+              <label class="form-label">اسم صاحب المصروف</label>
               <input id="beneficiary" class="form-control" placeholder="مثال: محطة وقود">
             </div>
             <div class="col-md-6">
@@ -188,8 +166,7 @@
   </button>
   <script>
     (function(){
-      const body = document.body;
-      const key  = "sidebar-collapsed";
+      const body = document.body, key="sidebar-collapsed";
       if (localStorage.getItem(key) === "1") body.classList.add("sidebar-collapsed");
       document.getElementById("toggleSidebar").addEventListener("click", ()=>{
         body.classList.toggle("sidebar-collapsed");
@@ -197,7 +174,7 @@
       });
     })();
 
-    /* فلترة حسب التاريخ + اسم صاحب المصروف (DOM فقط) */
+    /* فلترة DOM (تاريخ + اسم) */
     (function(){
       const fromEl = document.getElementById('filterFrom');
       const toEl   = document.getElementById('filterTo');
@@ -206,51 +183,34 @@
       const btnClr = document.getElementById('clearDateFilter');
       const tb     = document.getElementById('dataTable');
       const cntEl  = document.getElementById('expCount');
-
       if (!tb || !btnGo || !btnClr) return;
 
-      function apply() {
-        const from = fromEl.value || '';
-        const to   = toEl.value   || '';
-        const name = (nameEl.value || '').trim().toLowerCase();
+      function apply(){
+        const from = fromEl.value || '', to = toEl.value || '', n = (nameEl.value||'').trim().toLowerCase();
         let shown = 0;
-
-        tb.querySelectorAll('tbody tr').forEach(tr => {
-          const cells = tr.querySelectorAll('td');
-          if (!cells.length) return;
-
-          const dateText = (cells[0]?.innerText || '').trim();
-          const benText  = (cells[4]?.innerText || '').trim().toLowerCase();
-
-          if (!dateText || dateText.includes('جارٍ')) { tr.style.display = ''; return; }
-
+        tb.querySelectorAll('tbody tr').forEach(tr=>{
+          const tds = tr.querySelectorAll('td'); if(!tds.length) return;
+          const d = (tds[0].innerText||'').trim(), ben = (tds[4].innerText||'').trim().toLowerCase();
+          if (!d || d.includes('جارٍ')) { tr.style.display=''; return; }
           let ok = true;
-          if (from && dateText < from) ok = false;
-          if (to   && dateText > to)   ok = false;
-          if (name && !benText.includes(name)) ok = false;
-
+          if (from && d < from) ok = false;
+          if (to   && d > to) ok = false;
+          if (n && !ben.includes(n)) ok = false;
           tr.style.display = ok ? '' : 'none';
           if (ok) shown++;
         });
-
         if (cntEl) cntEl.textContent = String(shown);
       }
-
-      function clearFilter() {
-        fromEl.value = '';
-        toEl.value   = '';
-        nameEl.value = '';
-        tb.querySelectorAll('tbody tr').forEach(tr => tr.style.display = '');
+      function clearFilter(){
+        fromEl.value=''; toEl.value=''; nameEl.value='';
+        tb.querySelectorAll('tbody tr').forEach(tr=> tr.style.display='');
         const visible = Array.from(tb.querySelectorAll('tbody tr'))
-          .filter(tr => tr.style.display !== 'none' && tr.querySelectorAll('td').length)
-          .length;
+          .filter(tr => tr.style.display !== 'none' && tr.querySelectorAll('td').length).length;
         if (cntEl) cntEl.textContent = String(visible);
       }
-
       btnGo.addEventListener('click', apply);
       btnClr.addEventListener('click', clearFilter);
     })();
   </script>
-
 </body>
 </html>
