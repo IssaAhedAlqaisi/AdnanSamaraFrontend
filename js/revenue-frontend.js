@@ -1,23 +1,25 @@
-/* global api */
+/* global api, bootstrap */
 
-// أدوات بسيطة
+// أدوات
 const fmt = (n) => (n == null ? "-" : Number(n).toFixed(2));
 const onlyDate = (d) => (typeof d === "string" ? d.split("T")[0] : d);
 
-// حالة داخلية
+// حالة
 let REVENUE_DATA = [];
+let CURRENT_VIEW = [];       // آخر قائمة معروضة (للـفاتورة/الطباعة)
+let EDIT_ID = null;          // إن كنا نعدّل سجلًا
 
 document.addEventListener("DOMContentLoaded", () => {
-  // تحميل أولي
   loadRevenue();
 
-  // حفظ إيراد جديد
   const form = document.getElementById("revForm");
-  if (form) form.addEventListener("submit", onCreateRevenue);
+  if (form) form.addEventListener("submit", onSubmitRevenue);
 
-  // زر تطبيق الفلترة
   const filterBtn = document.getElementById("filterBtn");
   if (filterBtn) filterBtn.addEventListener("click", applyFilters);
+
+  const printInvoiceBtn = document.getElementById("printInvoiceBtn");
+  if (printInvoiceBtn) printInvoiceBtn.addEventListener("click", printInvoiceForCurrentView);
 });
 
 /* =============== تحميل وعرض =============== */
@@ -26,7 +28,6 @@ async function loadRevenue() {
   if (!tb) return;
   try {
     const list = await api.get("/revenue");
-    // نخزن النسخة الأصلية للفلترة
     REVENUE_DATA = Array.isArray(list) ? list : [];
     renderTable(REVENUE_DATA);
   } catch (err) {
@@ -42,23 +43,17 @@ function renderTable(list) {
   const rc = document.getElementById("revCount");
   if (!tb) return;
 
+  CURRENT_VIEW = list.slice(); // احفظ العرض الحالي
+
   if (!list.length) {
     tb.innerHTML = `<tr><td colspan="9" class="text-center text-muted">لا توجد بيانات</td></tr>`;
     if (rc) rc.textContent = "0";
     return;
   }
 
-  tb.innerHTML = list
-    .map((r) => {
-      const pay =
-        r.payment_type != null
-          ? r.payment_type
-          : r.payment_method != null
-          ? r.payment_method
-          : "-";
-      const id = r.id ?? r.rev_id ?? null;
-
-      return `
+  tb.innerHTML = list.map((r) => {
+    const pay = r.payment_type ?? r.payment_method ?? "-";
+    return `
       <tr>
         <td>${onlyDate(r.date) || "-"}</td>
         <td>${fmt(r.amount)}</td>
@@ -69,23 +64,44 @@ function renderTable(list) {
         <td>${r.driver_name || "-"}</td>
         <td>${r.vehicle_number || "-"}</td>
         <td>
-          ${
-            id
-              ? `<button class="btn btn-sm btn-danger" onclick="deleteRevenue(${id})" title="حذف">
-                   <i class="fa-solid fa-trash"></i>
-                 </button>`
-              : `<span class="text-muted">—</span>`
-          }
+          <button class="btn btn-sm btn-warning me-1" title="تعديل" onclick="startEdit(${r.id})">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button class="btn btn-sm btn-danger" title="حذف" onclick="deleteRevenue(${r.id})">
+            <i class="fa-solid fa-trash"></i>
+          </button>
         </td>
       </tr>`;
-    })
-    .join("");
+  }).join("");
 
   if (rc) rc.textContent = String(list.length);
 }
 
-/* =============== إنشاء سجل جديد =============== */
-async function onCreateRevenue(e) {
+/* =============== إنشاء/تعديل =============== */
+function startEdit(id) {
+  const row = REVENUE_DATA.find((x) => x.id === id);
+  if (!row) return;
+
+  EDIT_ID = id;
+  document.getElementById("modalTitle").innerHTML = `<i class="fa-solid fa-pen me-2"></i> تعديل الإيراد`;
+  document.getElementById("submitBtn").innerHTML = `<i class="fa-solid fa-save"></i> حفظ التعديل`;
+
+  // املأ الحقول (نفس المعرفات)
+  document.getElementById("amount").value = row.amount ?? "";
+  document.getElementById("payment_type").value = (row.payment_type ?? row.payment_method) || "كاش";
+  document.getElementById("tank_type").value = row.tank_type ?? "";
+  document.getElementById("water_amount").value = row.water_amount ?? "";
+  document.getElementById("source_type").value = row.source_type ?? "";
+  document.getElementById("driver_name").value = row.driver_name ?? "";      // اسم العميل
+  document.getElementById("vehicle_number").value = row.vehicle_number ?? "";
+  document.getElementById("notes").value = row.notes ?? "";
+
+  // افتح المودال
+  const modal = new bootstrap.Modal(document.getElementById("addModal"));
+  modal.show();
+}
+
+async function onSubmitRevenue(e) {
   e.preventDefault();
   const f = e.target;
 
@@ -95,40 +111,58 @@ async function onCreateRevenue(e) {
     tank_type: f.tank_type.value || "نقلة مياه",
     water_amount: f.water_amount.value ? Number(f.water_amount.value) : null,
     source_type: f.source_type.value || "غير محدد",
-    driver_name: f.driver_name.value || null,
+    driver_name: f.driver_name.value || null,     // اسم العميل (واجهة فقط)
     vehicle_number: f.vehicle_number.value || null,
     notes: f.notes.value || null,
-    // التاريخ يضبطه الباكند تلقائياً، وحقل الواجهة للعرض فقط
   };
 
   try {
-    const res = await api.post("/revenue", payload);
-    // بعض الباكندات ترجع { revenue: {...} } وأخرى ترجع {...} مباشرة
-    const created = (res && (res.revenue || res.data)) || res;
-    if (created) {
-      REVENUE_DATA.unshift(created);
-      renderTable(REVENUE_DATA);
+    if (EDIT_ID) {
+      // نحاول PUT، وإن فشل نفذ حذف+إضافة كحل احتياطي
+      try {
+        const res = await api.put(`/revenue/${EDIT_ID}`, payload);
+        const updated = res && (res.revenue || res.data || res);
+        if (updated) {
+          const idx = REVENUE_DATA.findIndex(r => r.id === EDIT_ID);
+          if (idx > -1) REVENUE_DATA[idx] = {...REVENUE_DATA[idx], ...updated};
+        }
+      } catch {
+        await api.delete(`/revenue/${EDIT_ID}`);
+        const res = await api.post("/revenue", payload);
+        const created = res && (res.revenue || res.data || res);
+        if (created) {
+          const idx = REVENUE_DATA.findIndex(r => r.id === EDIT_ID);
+          if (idx > -1) REVENUE_DATA[idx] = created;
+        }
+      }
+    } else {
+      const res = await api.post("/revenue", payload);
+      const created = res && (res.revenue || res.data || res);
+      if (created) REVENUE_DATA.unshift(created);
     }
 
-    // اغلاق المودال وتنظيف
+    EDIT_ID = null;
+    document.getElementById("modalTitle").innerHTML = `<i class="fa-solid fa-circle-plus me-2"></i> إضافة إيراد جديد`;
+    document.getElementById("submitBtn").innerHTML = `<i class="fa-solid fa-check"></i> حفظ`;
     f.reset();
+
+    // اغلاق المودال
     const closeBtn = document.querySelector("#addModal .btn-close");
     if (closeBtn) closeBtn.click();
+
+    renderTable(REVENUE_DATA);
   } catch (err) {
-    console.error("❌ خطأ إضافة الإيراد:", err);
-    alert("حدث خطأ أثناء الإضافة");
+    console.error("❌ خطأ الحفظ:", err);
+    alert("حدث خطأ أثناء الحفظ");
   }
 }
 
 /* =============== حذف =============== */
 async function deleteRevenue(id) {
-  if (!id) return alert("لا يمكن حذف هذا السجل (معرّف مفقود).");
   if (!confirm("هل تريد حذف هذا الإيراد؟")) return;
-
   try {
     await api.delete(`/revenue/${id}`);
-    // نحذف من الذاكرة ونُعيد العرض
-    REVENUE_DATA = REVENUE_DATA.filter((r) => (r.id ?? r.rev_id) !== id);
+    REVENUE_DATA = REVENUE_DATA.filter((r) => r.id !== id);
     renderTable(REVENUE_DATA);
   } catch (err) {
     console.error("❌ خطأ الحذف:", err);
@@ -140,23 +174,112 @@ async function deleteRevenue(id) {
 function applyFilters() {
   const fromDate = (document.getElementById("fromDate") || {}).value || "";
   const toDate   = (document.getElementById("toDate")   || {}).value || "";
-  const driver   = (document.getElementById("filterName") || {}).value?.trim() || "";
+  const client   = (document.getElementById("filterName") || {}).value?.trim() || "";
   const carNo    = (document.getElementById("filterCar")  || {}).value?.trim() || "";
 
   const filtered = REVENUE_DATA.filter((r) => {
-    // تاريخ
     const d = onlyDate(r.date) || "";
     if (fromDate && d < fromDate) return false;
     if (toDate && d > toDate) return false;
 
-    // اسم السائق
-    if (driver && !(r.driver_name || "").includes(driver)) return false;
-
-    // رقم المركبة
+    if (client && !(r.driver_name || "").includes(client)) return false; // اسم العميل
     if (carNo && !(r.vehicle_number || "").includes(carNo)) return false;
 
     return true;
   });
 
   renderTable(filtered);
+}
+
+/* =============== طباعة فاتورة للنتائج الحالية =============== */
+function printInvoiceForCurrentView() {
+  const rows = CURRENT_VIEW || [];
+  if (!rows.length) { alert("لا توجد نتائج لطباعتها. طبّق الفلترة أولًا."); return; }
+
+  const fromDate = (document.getElementById("fromDate") || {}).value || "";
+  const toDate   = (document.getElementById("toDate")   || {}).value || "";
+  const client   = (document.getElementById("filterName") || {}).value?.trim() || (rows[0].driver_name || "عميل");
+
+  const totalAmount = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const totalWater  = rows.reduce((s, r) => s + Number(r.water_amount || 0), 0);
+  const invoiceNo   = "01-" + new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0,14); // 01-YYYYMMDDHHMMSS
+
+  const tableRows = rows.map(r => `
+    <tr>
+      <td>${onlyDate(r.date) || "-"}</td>
+      <td>${r.tank_type || "-"}</td>
+      <td>${r.water_amount != null ? fmt(r.water_amount) : "-"}</td>
+      <td>${r.payment_type ?? r.payment_method ?? "-"}</td>
+      <td>${fmt(r.amount)}</td>
+    </tr>
+  `).join("");
+
+  const w = window.open("", "_blank", "width=900,height=700");
+  w.document.write(`<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>فاتورة - ${client}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+<style>
+  body{font-family:"Cairo",sans-serif;padding:18px}
+  .inv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .brand{font-weight:700;color:#1d4ed8}
+  .badge-no{font-weight:700}
+  table{width:100%}
+  th,td{text-align:center;vertical-align:middle}
+  .totals{margin-top:16px}
+  @media print { body{margin:12px} }
+</style>
+</head>
+<body>
+  <div class="inv-head">
+    <div>
+      <div class="brand">مؤسسة عدنان سمارة لنقل المياه</div>
+      <div class="text-muted">هاتف: — | عنوان: —</div>
+    </div>
+    <div class="text-end">
+      <div class="badge bg-primary badge-no">رقم الفاتورة: ${invoiceNo}</div>
+      <div>التاريخ: ${new Date().toLocaleDateString("ar-EG")}</div>
+    </div>
+  </div>
+
+  <h5 class="mb-1">فاتورة عميل</h5>
+  <div class="mb-3">العميل: <b>${client}</b>${fromDate || toDate ? ` — الفترة: <b>${fromDate || "—"}</b> إلى <b>${toDate || "—"}</b>` : ""}</div>
+
+  <table class="table table-bordered">
+    <thead class="table-light">
+      <tr>
+        <th>التاريخ</th>
+        <th>نوع النقلة</th>
+        <th>كمية المياه (م³)</th>
+        <th>طريقة الدفع</th>
+        <th>المبلغ (د.أ)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows}
+    </tbody>
+  </table>
+
+  <div class="row totals">
+    <div class="col-md-6">
+      إجمالي عدد السجلات: <b>${rows.length}</b><br>
+      إجمالي الكمية (م³): <b>${fmt(totalWater)}</b>
+    </div>
+    <div class="col-md-6 text-end">
+      <h5>الإجمالي المستحق: <b>${fmt(totalAmount)} د.أ</b></h5>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <small class="text-muted">هذه الفاتورة مُولّدة من قسم الإيرادات — رمز الخدمة: 01 (مياه)</small>
+  </div>
+
+  <script>
+    window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}};
+  <\/script>
+</body>
+</html>`);
+  w.document.close();
 }
