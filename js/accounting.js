@@ -3,34 +3,34 @@
 
 (function () {
   // عناصر DOM
-  const revenueRows = document.getElementById('revenueRows');
-  const expensesRows = document.getElementById('expensesRows');
+  const revenueRows   = document.getElementById('revenueRows');
+  const expensesRows  = document.getElementById('expensesRows');
 
   const revFrom = document.getElementById('revFrom');
   const revTo   = document.getElementById('revTo');
   const expFrom = document.getElementById('expFrom');
   const expTo   = document.getElementById('expTo');
 
-  // فلاتر إضافية حسب طلبك
+  // فلاتر إضافية
   const revClientEl = document.getElementById('revClient'); // اسم العميل
   const revTypeEl   = document.getElementById('revType');   // النوع (كاش/ذمم/فيزا)
 
   const expOwnerEl  = document.getElementById('expOwner');  // اسم صاحب المصروف
   const expPayEl    = document.getElementById('expPay');    // طريقة الدفع
+  const expTypeEl   = document.getElementById('expType');   // النوع (مصاريف)
 
-  const revTotalEl = document.getElementById('revTotal');
-  const expTotalEl = document.getElementById('expTotal');
+  const revTotalEl        = document.getElementById('revTotal');
+  const expTotalEl        = document.getElementById('expTotal');
+  const revTotalSummary   = document.getElementById('revTotalSummary');
+  const expTotalSummary   = document.getElementById('expTotalSummary');
+  const profitValue       = document.getElementById('profitValue');
+  const profitPercent     = document.getElementById('profitPercent');
 
-  const revTotalSummary = document.getElementById('revTotalSummary');
-  const expTotalSummary = document.getElementById('expTotalSummary');
-  const profitValue = document.getElementById('profitValue');
-  const profitPercent = document.getElementById('profitPercent');
-
-  const printRevenueBtn  = document.getElementById('printRevenueBtn');
-  const printExpensesBtn = document.getElementById('printExpensesBtn');
+  const printRevenueBtn   = document.getElementById('printRevenueBtn');
+  const printExpensesBtn  = document.getElementById('printExpensesBtn');
 
   // بيانات خام
-  let revenueAll = [];
+  let revenueAll  = [];
   let expensesAll = [];
 
   // أدوات
@@ -57,7 +57,7 @@
   function renderRevenue(rows) {
     revenueRows.innerHTML = rows.length
       ? rows.map(r => {
-          const client = r.driver_name || '-'; // نعرضه كـ "اسم العميل"
+          const client = r.driver_name || '-';
           const pay    = (r.payment_type ?? r.payment_method ?? '-');
           return `
             <tr>
@@ -109,8 +109,8 @@
   function applyRevenueFilter() {
     const f = revFrom.value || null;
     const t = revTo.value || null;
-    const name = (revClientEl?.value || '').trim();          // اسم العميل
-    const ptype = (revTypeEl?.value || '').trim().toLowerCase(); // النوع
+    const name  = (revClientEl?.value || '').trim();
+    const ptype = (revTypeEl?.value || '').trim().toLowerCase();
 
     const filtered = revenueAll.filter(r => {
       if (!inRange(r.date, f, t)) return false;
@@ -135,8 +135,9 @@
   function applyExpensesFilter() {
     const f = expFrom.value || null;
     const t = expTo.value || null;
-    const owner = (expOwnerEl?.value || '').trim();            // صاحب المصروف
-    const paym  = (expPayEl?.value || '').trim().toLowerCase();// طريقة الدفع
+    const owner = (expOwnerEl?.value || '').trim();
+    const paym  = (expPayEl?.value || '').trim().toLowerCase();
+    const etype = (expTypeEl?.value || '').trim().toLowerCase();
 
     const filtered = expensesAll.filter(r => {
       if (!inRange(r.date, f, t)) return false;
@@ -149,6 +150,11 @@
       if (paym) {
         const pm = (r.pay_method || '').toString().toLowerCase();
         if (pm !== paym) return false;
+      }
+
+      if (etype) {
+        const tn = (r.type_name || r.type || '').toString().toLowerCase();
+        if (!tn.includes(etype)) return false;
       }
 
       return true;
@@ -185,12 +191,10 @@
   // تحميل أوّلي
   (async function init() {
     try {
-      // إيرادات
       const rev = await revenueAPI.getAll();
       revenueAll = Array.isArray(rev) ? rev : [];
       renderRevenue(revenueAll);
 
-      // مصاريف
       const exp = await expensesAPI.getAll();
       expensesAll = (Array.isArray(exp) ? exp : []).map(e => ({
         ...e,
