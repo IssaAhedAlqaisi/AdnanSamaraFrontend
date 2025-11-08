@@ -87,7 +87,7 @@ function renderTable(list) {
         <td>${r.tank_type || "-"}</td>
         <td>${water != null ? fmt(water) : "-"}</td>
         <td>${r.source_type || "-"}</td>
-        <td>${r.driver_name || "-"}</td>  <!-- نعرضه كـ "العميل" -->
+        <td>${r.driver_name || "-"}</td>
         <td>${r.vehicle_number || "-"}</td>
         <td>${cleanNotes}</td>
         <td>
@@ -131,10 +131,15 @@ async function onSubmitRevenue(e) {
   e.preventDefault();
   const f = e.target;
 
-  // 👈 لو المستخدم أدخل تاريخ نرسله، وإلا ما نرسله حتى يضيفه الباك-إند تلقائيًا (تاريخ اليوم)
-  const userDate = (f.date && f.date.value && f.date.value.trim()) ? f.date.value.trim() : null;
+  // ✅ التاريخ يدوي وإلزامي – لا أوتوماتيك
+  const dateVal = (f.date && f.date.value && f.date.value.trim()) ? f.date.value.trim() : "";
+  if (!dateVal) {
+    alert("الرجاء إدخال التاريخ (إجباري).");
+    return;
+  }
 
   const payload = {
+    date: dateVal,
     amount: Number(f.amount.value || 0),
     payment_type: f.payment_type.value || "كاش",
     tank_type: f.tank_type.value || "نقلة مياه",
@@ -144,7 +149,6 @@ async function onSubmitRevenue(e) {
     vehicle_number: f.vehicle_number.value || null,
     notes: stampWaterInNotes(f.notes.value, f.water_amount.value ? Number(f.water_amount.value) : null),
   };
-  if (userDate) payload.date = userDate;
 
   try {
     if (EDIT_ID) {
@@ -256,8 +260,9 @@ function printInvoiceForCurrentView() {
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 <style>
 body{font-family:"Cairo",sans-serif;padding:18px}
-.inv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.inv-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
 .brand{font-weight:700;color:#1d4ed8}
+.info-line{margin-top:4px}
 .badge-no{font-weight:700}
 th,td{text-align:center;vertical-align:middle}
 @media print{body{margin:12px}}
@@ -266,7 +271,8 @@ th,td{text-align:center;vertical-align:middle}
 <div class="inv-head">
   <div>
     <div class="brand">مؤسسة عدنان سمارة لنقل المياه</div>
-    <div class="text-muted">هاتف: — | عنوان: —</div>
+    <div class="text-muted info-line">العنوان: ____________________</div>
+    <div class="text-muted info-line">هاتف: ____________________</div>
   </div>
   <div class="text-end">
     <div class="badge bg-primary badge-no">رقم الفاتورة: ${invoiceNo}</div>
@@ -288,18 +294,7 @@ th,td{text-align:center;vertical-align:middle}
   <div class="col-md-6 text-end"><h5>الإجمالي المستحق: <b>${fmt(totalAmount)} د.أ</b></h5></div>
 </div>
 <small class="text-muted d-block mt-3">هذه الفاتورة مُولّدة من قسم الإيرادات — رمز الخدمة: 01 (مياه)</small>
-<script>window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}};<\/script>
+<script>window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}}<\/script>
 </body></html>`);
   w.document.close();
-}
-
-// تعبئة تاريخ اليوم تلقائيًا عند فتح مودال الإضافة فقط لو الحقل فاضي
-const addModalEl = document.getElementById('addModal');
-if (addModalEl) {
-  addModalEl.addEventListener('show.bs.modal', () => {
-    if (!EDIT_ID) {
-      const di = document.getElementById('date');
-      if (di && !di.value) di.value = new Date().toISOString().slice(0,10);
-    }
-  });
 }

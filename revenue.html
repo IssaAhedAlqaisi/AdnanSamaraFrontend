@@ -138,7 +138,7 @@
         </div>
         <div class="modal-body">
           <form id="revForm" class="row g-3">
-            <div class="col-md-4"><label class="form-label">التاريخ</label><input type="date" id="date" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">التاريخ</label><input type="date" id="date" class="form-control" required></div>
             <div class="col-md-4"><label class="form-label">المبلغ</label><input type="number" id="amount" class="form-control" required></div>
             <div class="col-md-4"><label class="form-label">طريقة الدفع</label>
               <select id="payment_type" class="form-select">
@@ -174,7 +174,7 @@
 <style>body{font-family:"Cairo",sans-serif;padding:16px}table{width:100%}th,td{text-align:center}@media print{body{margin:12px}}</style>
 </head><body>
 <h4 class="text-center mb-3">قائمة الإيرادات</h4>${table.outerHTML}
-<script>window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}};<\/script>
+<script>window.onload=function(){window.print();window.onfocus=function(){setTimeout(()=>window.close(),300);}}<\/script>
 </body></html>`);
       w.document.close();
     }
